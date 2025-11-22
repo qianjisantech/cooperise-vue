@@ -46,10 +46,33 @@ const fixAxiosGlobalPlugin = () => {
   }
 }
 
+// 自定义插件：修复 HTML 中的路径解析问题
+const fixHtmlPathPlugin = () => {
+  return {
+    name: 'fix-html-path',
+    enforce: 'pre',
+    resolveId(id, importer) {
+      // 如果是从 HTML 文件导入的 /src/main.js，转换为正确的路径
+      if (id === '/src/main.js' || id === 'src/main.js') {
+        const resolved = path.resolve(__dirname, 'src/main.js')
+        return resolved
+      }
+      // 处理其他 /src/ 开头的路径
+      if (id.startsWith('/src/')) {
+        const relativePath = id.replace('/src/', 'src/')
+        const resolved = path.resolve(__dirname, relativePath)
+        return resolved
+      }
+    }
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  root: __dirname,
   base: '/',
   plugins: [
+    fixHtmlPathPlugin(),
     vue(),
     fixTdesignIconsPlugin(),
     fixAxiosGlobalPlugin()
@@ -80,8 +103,6 @@ export default defineConfig({
       include: [/tdesign-vue-next/, /tdesign-icons-vue-next/, /node_modules/]
     },
     rollupOptions: {
-      // 确保入口文件正确
-      input: path.resolve(__dirname, 'index.html'),
       output: {
         manualChunks: {
           'tdesign': ['tdesign-vue-next', 'tdesign-icons-vue-next'],
