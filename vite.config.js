@@ -45,6 +45,7 @@ const fixAxiosGlobalPlugin = () => {
 
 // https://vite.dev/config/
 export default defineConfig({
+
   plugins: [
     vue(),
     fixTdesignIconsPlugin(),
@@ -61,7 +62,7 @@ export default defineConfig({
     open: true
   },
   define: {
-    // 修复 sockjs-client 在 Vite 中的 global is not defined 问题
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
     global: 'globalThis'
   },
   optimizeDeps: {
