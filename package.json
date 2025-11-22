@@ -1,0 +1,39 @@
+{
+  "name": "dcp-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "vite --mode development",
+    "dev:test": "vite --mode test",
+    "dev:prod": "vite --mode production",
+    "build": "vite build --mode production",
+    "build:test": "vite build --mode test",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stomp/stompjs": "6.1.2",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
+    "axios": "^1.13.1",
+    "js-cookie": "^3.0.5",
+    "pinia": "^2.3.1",
+    "sockjs-client": "^1.6.1",
+    "sortablejs": "^1.15.6",
+    "tdesign-icons-vue-next": "^0.2.6",
+    "tdesign-vue-next": "^1.17.2",
+    "uuid": "^13.0.0",
+    "vue": "^3.5.22",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.6.2",
+    "less": "^4.4.2",
+    "sass": "^1.93.2",
+    "vite": "^4.5.14"
+  }
+}

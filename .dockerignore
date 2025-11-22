@@ -1,0 +1,47 @@
+# Node modules
+node_modules
+npm-debug.log
+pnpm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Environment
+.env.local
+.env.*.local
+
+# Testing
+coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Misc
+.cache
+temp
+tmp
+
+# Documentation (optional)
+*.md
+!README.md
+
+# Mock data (已移除)
+mock

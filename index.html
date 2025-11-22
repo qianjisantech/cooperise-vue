@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Diego - 简单好用的需求管控系统，高效的任务管理，实时团队协作" />
+    <meta name="keywords" content="需求管理,项目管理,任务管理,团队协作,Diego" />
+    <title>Diego - 需求管控系统</title>
+    <!-- Polyfill for axios - MUST be in head before any module scripts -->
+    <script>
+      (function() {
+        // Ensure globalThis exists
+        if (typeof globalThis === 'undefined') {
+          if (typeof self !== 'undefined') { self.globalThis = self; }
+          else if (typeof window !== 'undefined') { window.globalThis = window; }
+          else if (typeof global !== 'undefined') { global.globalThis = global; }
+        }
+
+        // Ensure global exists
+        if (typeof global === 'undefined') {
+          window.global = window;
+        }
+
+        // Define Request/Response/Headers classes
+        var RequestClass = class Request { constructor() {} };
+        var ResponseClass = class Response { constructor() {} };
+        var HeadersClass = class Headers { constructor() {} };
+
+        // Define on all possible global objects
+        if (typeof globalThis !== 'undefined') {
+          globalThis.Request = globalThis.Request || RequestClass;
+          globalThis.Response = globalThis.Response || ResponseClass;
+          globalThis.Headers = globalThis.Headers || HeadersClass;
+        }
+
+        if (typeof window !== 'undefined') {
+          window.Request = window.Request || RequestClass;
+          window.Response = window.Response || ResponseClass;
+          window.Headers = window.Headers || HeadersClass;
+        }
+
+        if (typeof self !== 'undefined') {
+          self.Request = self.Request || RequestClass;
+          self.Response = self.Response || ResponseClass;
+          self.Headers = self.Headers || HeadersClass;
+        }
+
+        if (typeof global !== 'undefined') {
+          global.Request = global.Request || RequestClass;
+          global.Response = global.Response || ResponseClass;
+          global.Headers = global.Headers || HeadersClass;
+        }
+
+        console.log('[HTML Polyfill] Initialized:', {
+          globalThis: typeof globalThis,
+          Request: typeof globalThis.Request,
+          Response: typeof globalThis.Response,
+          Headers: typeof globalThis.Headers
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
