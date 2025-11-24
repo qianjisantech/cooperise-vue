@@ -99,7 +99,7 @@ const shownAnnouncementIds = new Set()
 
 // WebSocket 连接
 const connectWebSocket = () => {
-  const wsUrl = `${import.meta.env.VITE_WS_URL || 'http://47.100.0.96:80'}/ws`
+  const wsUrl = `${import.meta.env.VITE_WS_URL || 'http://47.100.0.96'}/ws`
 
   // 从 Cookie 获取 token
   const token = Cookies.get('dcp_token')
