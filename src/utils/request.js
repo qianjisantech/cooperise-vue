@@ -5,7 +5,7 @@ import { useLoadingStore } from '@/store/loading'
 import { objectKeysToSnake, objectKeysToCamel } from './caseConverter'
 
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://47.100.0.96:80',
   timeout: 10000
 })
 
