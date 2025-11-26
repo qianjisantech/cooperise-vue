@@ -4,6 +4,4 @@ node_modules
 *.log
 .vscode
 .idea
-src
-public
 *.md

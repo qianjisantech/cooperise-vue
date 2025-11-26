@@ -55,17 +55,60 @@ const fixHtmlPathPlugin = () => {
   return {
     name: 'fix-html-path',
     enforce: 'pre',
+    // 在构建时处理 HTML
+    transformIndexHtml: {
+      enforce: 'pre',
+      transform(html, ctx) {
+        // 在构建时，确保路径正确
+        return html
+      }
+    },
     resolveId(id, importer) {
       // 处理以 /src/ 开头的路径（从 HTML 中导入）
       if (id.startsWith('/src/')) {
         // 移除前导斜杠，转换为相对路径
         const relativePath = id.slice(1) // 移除开头的 /
         const resolved = path.resolve(projectRoot, relativePath)
-        return resolved
+        
+        // 检查文件是否存在
+        try {
+          if (fs.existsSync(resolved)) {
+            console.log(`[fixHtmlPathPlugin] 解析成功: ${id} -> ${resolved}`)
+            return resolved
+          } else {
+            console.warn(`[fixHtmlPathPlugin] 文件不存在: ${resolved}, 尝试查找...`)
+            // 尝试其他可能的路径
+            const altPaths = [
+              path.resolve(process.cwd(), relativePath),
+              path.resolve(__dirname, relativePath),
+              path.resolve(projectRoot, 'src', id.replace('/src/', ''))
+            ]
+            for (const altPath of altPaths) {
+              if (fs.existsSync(altPath)) {
+                console.log(`[fixHtmlPathPlugin] 在备用路径找到: ${altPath}`)
+                return altPath
+              }
+            }
+            console.error(`[fixHtmlPathPlugin] 所有路径都找不到文件: ${id}`)
+            // 即使文件不存在也返回，让 Vite 处理错误
+            return resolved
+          }
+        } catch (e) {
+          console.error(`[fixHtmlPathPlugin] 解析错误:`, e)
+          return resolved
+        }
       }
       // 处理 src/main.js 这种相对路径
       if (id === 'src/main.js' || id.startsWith('src/')) {
         const resolved = path.resolve(projectRoot, id)
+        try {
+          if (fs.existsSync(resolved)) {
+            console.log(`[fixHtmlPathPlugin] 解析成功: ${id} -> ${resolved}`)
+            return resolved
+          }
+        } catch (e) {
+          // 忽略错误
+        }
         return resolved
       }
       // 返回 null 让其他插件处理
@@ -77,6 +120,16 @@ const fixHtmlPathPlugin = () => {
 // https://vite.dev/config/
 // 获取项目根目录（在 Vercel 构建时也能正确工作）
 const rootDir = process.env.VERCEL ? process.cwd() : __dirname
+
+console.log('[Vite Config] 项目根目录:', rootDir)
+console.log('[Vite Config] 是否在 Vercel:', !!process.env.VERCEL)
+console.log('[Vite Config] process.cwd():', process.cwd())
+console.log('[Vite Config] __dirname:', __dirname)
+
+// 检查 src/main.js 是否存在
+const mainJsPath = path.resolve(rootDir, 'src/main.js')
+console.log('[Vite Config] src/main.js 路径:', mainJsPath)
+console.log('[Vite Config] src/main.js 是否存在:', fs.existsSync(mainJsPath))
 
 export default defineConfig({
   root: rootDir,
