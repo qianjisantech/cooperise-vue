@@ -48,28 +48,32 @@ const fixAxiosGlobalPlugin = () => {
 
 // 自定义插件：修复 HTML 中的路径解析问题
 const fixHtmlPathPlugin = () => {
+  const projectRoot = process.cwd()
   return {
     name: 'fix-html-path',
     enforce: 'pre',
     resolveId(id, importer) {
-      // 如果是从 HTML 文件导入的 /src/main.js，转换为正确的路径
-      if (id === '/src/main.js' || id === 'src/main.js') {
-        const resolved = path.resolve(__dirname, 'src/main.js')
-        return resolved
-      }
-      // 处理其他 /src/ 开头的路径
+      // 处理以 /src/ 开头的路径（从 HTML 中导入）
       if (id.startsWith('/src/')) {
-        const relativePath = id.replace('/src/', 'src/')
-        const resolved = path.resolve(__dirname, relativePath)
+        // 移除前导斜杠，转换为相对路径
+        const relativePath = id.slice(1) // 移除开头的 /
+        const resolved = path.resolve(projectRoot, relativePath)
         return resolved
       }
+      // 处理 src/main.js 这种相对路径
+      if (id === 'src/main.js' || id.startsWith('src/')) {
+        const resolved = path.resolve(projectRoot, id)
+        return resolved
+      }
+      // 返回 null 让其他插件处理
+      return null
     }
   }
 }
 
 // https://vite.dev/config/
 export default defineConfig({
-  root: __dirname,
+  root: process.cwd(), // 使用当前工作目录，确保在 Vercel 构建时路径正确
   base: '/',
   plugins: [
     fixHtmlPathPlugin(),
@@ -79,7 +83,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(process.cwd(), 'src')
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     // 确保路径解析正确
