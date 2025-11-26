@@ -43,16 +43,16 @@ const staticChildRoutes = [
       icon: 'dashboard'
     }
   },
-  {
-    path: '/logs',
-    name: 'LogManagement',
-    component: () => import('@/views/logs/LogManagement.vue'),
-    meta: {
-      title: '记录管理',
-      requiresAuth: true,
-      icon: 'view-module'
-    }
-  },
+  // {
+  //   path: '/logs',
+  //   name: 'LogManagement',
+  //   component: () => import('@/views/logs/LogManagement.vue'),
+  //   meta: {
+  //     title: '记录管理',
+  //     requiresAuth: true,
+  //     icon: 'view-module'
+  //   }
+  // },
   {
     path: '/space/projects',
     name: 'SpaceProjects',
