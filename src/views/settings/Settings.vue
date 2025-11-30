@@ -100,11 +100,11 @@
         <div v-if="activeMenu === 'account'" class="setting-section">
           <t-card title="基本信息" class="setting-card">
             <t-form label-align="left" label-width="100px">
+<!--              <t-form-item label="用户编码">-->
+<!--                <t-input v-model="accountData.user_code" disabled />-->
+<!--              </t-form-item>-->
               <t-form-item label="用户名">
-                <t-input v-model="accountData.username" disabled />
-              </t-form-item>
-              <t-form-item label="姓名">
-                <t-input v-model="accountData.name" />
+                <t-input v-model="accountData.username" />
               </t-form-item>
               <t-form-item label="邮箱">
                 <t-input  v-model="accountData.email" disabled />
@@ -118,7 +118,7 @@
           <t-card title="头像设置" class="setting-card">
             <div class="avatar-section">
               <t-avatar size="80px" :image="accountData.avatar">
-                {{ accountData.name ? accountData.name.charAt(0) : 'A' }}
+                {{ accountData.user_code ? accountData.user_code.charAt(0) : 'A' }}
               </t-avatar>
               <div class="avatar-actions">
                 <t-button theme="primary" variant="outline">更换头像</t-button>
@@ -294,8 +294,8 @@ const loading = ref(false)
 
 // 用户账号数据
 const accountData = ref({
+  user_code: '',
   username: '',
-  name: '',
   email: '',
   phone: '',
   avatar: ''
@@ -588,9 +588,9 @@ const handleSave = async () => {
     if (activeMenu.value === 'account') {
       const res = await updateAccountSettings(accountData.value)
       if (res.success) {
-        MessagePlugin.success('账号设置保存成功')
+        await MessagePlugin.success('账号设置保存成功')
       } else {
-        MessagePlugin.error(res.message || '保存失败')
+        await MessagePlugin.error(res.message || '保存失败')
       }
     } else if (activeMenu.value === 'notification' || activeSubMenu.value.startsWith('notification-')) {
       const data = {
@@ -599,26 +599,27 @@ const handleSave = async () => {
       }
       const res = await updateNotificationSettings(data)
       if (res.success) {
-        MessagePlugin.success('通知设置保存成功')
+        await MessagePlugin.success('通知设置保存成功')
       } else {
-        MessagePlugin.error(res.message || '保存失败')
+        await MessagePlugin.error(res.message || '保存失败')
       }
     } else if (activeMenu.value.startsWith('system') || activeSubMenu.value.startsWith('system-')) {
       const res = await updateSystemSettings(systemSettings.value)
       if (res.success) {
-        MessagePlugin.success('系统设置保存成功')
+        await MessagePlugin.success('系统设置保存成功')
       } else {
-        MessagePlugin.error(res.message || '保存失败')
+        await MessagePlugin.error(res.message || '保存失败')
       }
     } else if (activeMenu.value.startsWith('security')) {
-      MessagePlugin.success('安全设置保存成功')
+      await MessagePlugin.success('安全设置保存成功')
     } else {
-      MessagePlugin.success('设置已保存')
+      await MessagePlugin.success('设置已保存')
     }
   } catch (error) {
     console.error('保存设置失败:', error)
-    MessagePlugin.error('保存设置失败')
+    await MessagePlugin.error('保存设置失败')
   } finally {
+    await fetchUserSettings()
     loading.value = false
   }
 }

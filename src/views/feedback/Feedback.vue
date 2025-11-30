@@ -28,7 +28,7 @@
         >
           <t-icon name="queue" size="16px" />
           <span class="tab-label">全部</span>
-          <span class="tab-count">{{ feedbackList.length }}</span>
+          <span class="tab-count">{{ allCount }}</span>
         </div>
         <div
           class="tab-item"
@@ -523,7 +523,7 @@ const pagination = ref({
 // 统计数据
 const openCount = ref(0)
 const closedCount = ref(0)
-
+const allCount = ref(0)
 // 加载反馈列表（分页）
 const loadFeedbackList = async () => {
   try {
@@ -564,8 +564,9 @@ const loadFeedbackList = async () => {
       pagination.value.current = res.data.current || 1
 
       // 更新统计数据（从后端返回或本地计算）
-      openCount.value = res.data.openCount || feedbackList.value.filter(f => f.status === 'open').length
-      closedCount.value = res.data.closedCount || feedbackList.value.filter(f => f.status === 'closed').length
+      openCount.value = res.data.opened
+      closedCount.value = res.data.closed
+      allCount.value = res.data.all
 
       // 为每个反馈加载评论
       await loadAllComments()
