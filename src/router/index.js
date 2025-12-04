@@ -72,6 +72,50 @@ const staticChildRoutes = [
       requiresAuth: true,
       icon: 'usergroup'
     }
+  },
+  {
+    path: '/workspace/filter',
+    name: 'WorkspaceFilter',
+    component: () => import('@/views/workspace/Filter.vue'),
+    meta: {
+      title: '筛选器',
+      requiresAuth: true,
+      icon: 'filter',
+      hidden: true
+    }
+  },
+  {
+    path: '/workspace/my-created',
+    name: 'MyCreated',
+    component: () => import('@/views/workspace/MyCreated.vue'),
+    meta: {
+      title: '我的创建',
+      requiresAuth: true,
+      icon: 'add-circle',
+      hidden: true
+    }
+  },
+  {
+    path: '/workspace/my-watched',
+    name: 'MyWatched',
+    component: () => import('@/views/workspace/MyWatched.vue'),
+    meta: {
+      title: '我的关注',
+      requiresAuth: true,
+      icon: 'star',
+      hidden: true
+    }
+  },
+  {
+    path: '/workspace/my-completed',
+    name: 'MyCompleted',
+    component: () => import('@/views/workspace/MyCompleted.vue'),
+    meta: {
+      title: '我的完成',
+      requiresAuth: true,
+      icon: 'check-circle',
+      hidden: true
+    }
   }
 ]
 

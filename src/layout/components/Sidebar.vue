@@ -24,7 +24,7 @@
 
       <!-- 二级菜单栏 -->
       <transition name="slide">
-        <div v-if="showSecondary" class="secondary-menu" :class="{ 'is-changelog': activeFirstMenu === '/changelog' }">
+        <div v-if="showSecondary" class="secondary-menu" :class="{ 'is-changelog': activeFirstMenu === '/changelog', 'is-workspace': activeFirstMenu === 'workspace' }">
           <!-- 二级菜单顶部返回按钮（仅组织模块显示） -->
           <div v-if="activeFirstMenu === '/space'" class="secondary-footer">
             <t-button
@@ -61,7 +61,11 @@
                 @click="handleItemClick(item)"
               >
                 <t-icon v-if="item.icon" :name="item.icon" size="16px" />
-                <span class="item-label">{{ item.label }}</span>
+                <span class="item-label-wrapper">
+                  <span class="item-label">
+                    {{ item.label }}<span v-if="item.viewCount !== undefined" class="view-count-badge">{{ item.viewCount }}</span>
+                  </span>
+                </span>
 
                 <!-- 我的视图-右侧操作按钮 -->
                 <div v-if="item.actions" class="item-actions" @click.stop>
@@ -209,8 +213,7 @@ import {
   deleteView,
   createViewFolder,
   updateViewFolder,
-  deleteViewFolder,
-  getViewFolderList
+  deleteViewFolder
 } from '@/api/workspace'
 import { getSpaceList } from '@/api/space'
 import { getChangelogList, deleteChangelog } from '@/api/changelog'
@@ -296,6 +299,10 @@ const generateViewMenuItems = () => {
 
   // 遍历文件夹
   viewFolders.value.forEach(folder => {
+    // 计算该文件夹下的视图数量
+    const folderViews = myViews.value.filter(view => view.folderId === folder.id)
+    const viewCount = folderViews.length
+    
     // 添加文件夹项
     items.push({
       type: 'folder',
@@ -305,7 +312,8 @@ const generateViewMenuItems = () => {
       indent: true,
       isExpanded: expandedFolders.value.has(folder.id),
       showFolderActions: true, // 标记显示文件夹操作按钮
-      folderData: folder // 保存完整的文件夹数据
+      folderData: folder, // 保存完整的文件夹数据
+      viewCount: viewCount // 视图数量
     })
 
     // 如果文件夹展开，添加该文件夹下的视图
@@ -333,7 +341,6 @@ const generateViewMenuItems = () => {
       value: '/workspace/view/my',
       query: { id: view.id },
       label: view.name,
-      icon: getViewIcon(view.type),
       indent: true,
       viewId: view.id,
       showViewActions: true, // 标记显示视图操作按钮
@@ -531,12 +538,62 @@ const currentSecondaryMenu = computed(() => {
     const myIssuesIndex = menu.children.findIndex(child => child.label === '我的事项')
 
     menu.children.forEach((child, index) => {
-      items.push(child)
+      // 如果是"我的视图"菜单项，替换为生成的视图菜单项
+      if (index === myViewsIndex) {
+        // 添加"我的视图"菜单项（移除图标，设置为不可点击）
+        const { icon, ...myViewsItem } = child
+        myViewsItem.actions = true // 设置为不可点击
+        items.push(myViewsItem)
+        // 添加视图菜单项（文件夹和视图）
+        const viewMenuItems = generateViewMenuItems()
+        viewMenuItems.forEach(viewItem => {
+          items.push(viewItem)
+        })
+      } else if (index === myIssuesIndex) {
+        // 在"我的事项"之前添加"筛选器"菜单项
+        items.push({
+          label: '筛选器',
+          value: '/workspace/filter',
+          path: '/workspace/filter',
+          icon: 'filter'
+        })
+        // 如果是"我的事项"菜单项，添加事项数量
+        const myIssuesItem = { ...child }
+        myIssuesItem.viewCount = workspaceStore.issueCount
+        items.push(myIssuesItem)
+        // 在"我的事项"之后添加三个菜单项
+        items.push({
+          label: '我的创建',
+          value: '/workspace/my-created',
+          path: '/workspace/my-created',
+          icon: 'add-circle'
+        })
+        items.push({
+          label: '我的关注',
+          value: '/workspace/my-watched',
+          path: '/workspace/my-watched',
+          icon: 'star'
+        })
+        items.push({
+          label: '我的完成',
+          value: '/workspace/my-completed',
+          path: '/workspace/my-completed',
+          icon: 'check-circle'
+        })
+      } else {
+        items.push(child)
+      }
 
-      // 如果找到了"我的视图"，并且下一个是"我的事项"，在中间插入分隔线
-      if (myViewsIndex !== -1 && myIssuesIndex !== -1 &&
-          index === myViewsIndex && myIssuesIndex === index + 1) {
-        items.push({ type: 'divider' })
+      // 在"我的视图"和"我的事项"之间插入分隔线
+      if (myViewsIndex !== -1 && myIssuesIndex !== -1) {
+        // 如果"我的视图"在"我的事项"前面
+        if (index === myViewsIndex && myIssuesIndex > myViewsIndex) {
+          items.push({ type: 'divider' })
+        }
+        // 如果"我的事项"在"我的视图"前面
+        else if (index === myIssuesIndex && myViewsIndex > myIssuesIndex) {
+          items.push({ type: 'divider' })
+        }
       }
     })
 
@@ -1157,57 +1214,78 @@ const getViewIcon = (viewType) => {
 const loadMyViews = async () => {
   try {
     viewsLoading.value = true
-    const res = await getMyViews()
-    if (res.success) {
-      const data = res.data || []
+    // 直接使用假数据，不再调用API
+    const data = [
+      // 视图文件夹
+      {
+        id: 'folder-1',
+        name: '项目管理',
+        type: 'folder',
+        children: [
+          { id: 'view-gantt', name: '项目进度', type: 'gantt' },
+          { id: 'view-board', name: '任务分配', type: 'board' },
+          { id: 'view-calendar', name: '项目日历', type: 'calendar' }
+        ]
+      }
+    ]
 
-      // 解析树形结构数据
-      const folders = []
-      const views = []
+    // 解析树形结构数据
+    const folders = []
+    const views = []
 
-      data.forEach(item => {
-        if (item.type === 'folder') {
-          // 添加文件夹
-          folders.push({
-            id: item.id,
-            name: item.name
-          })
+    data.forEach(item => {
+      if (item.type === 'folder') {
+        // 添加文件夹
+        folders.push({
+          id: item.id,
+          name: item.name
+        })
 
-          // 添加文件夹下的视图
-          if (item.children && item.children.length > 0) {
-            item.children.forEach(child => {
-              views.push({
-                id: child.id,
-                name: child.name,
-                type: child.type,
-                folderId: item.id // 关联到父文件夹
-              })
+        // 添加文件夹下的视图
+        if (item.children && item.children.length > 0) {
+          item.children.forEach(child => {
+            views.push({
+              id: child.id,
+              name: child.name,
+              type: child.type,
+              folderId: item.id // 关联到父文件夹
             })
-          }
-        } else {
-          // 根级别的视图（没有文件夹）
-          views.push({
-            id: item.id,
-            name: item.name,
-            type: item.type,
-            folderId: null
           })
         }
-      })
+      } else {
+        // 根级别的视图（没有文件夹）
+        views.push({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          folderId: null
+        })
+      }
+    })
 
-      viewFolders.value = folders
-      myViews.value = views
+    viewFolders.value = folders
+    myViews.value = views
 
-      // 默认展开所有文件夹
-      folders.forEach(folder => {
-        expandedFolders.value.add(folder.id)
-      })
-    } else {
-      MessagePlugin.error(res.message || '获取视图列表失败')
-    }
+    // 默认展开所有文件夹
+    folders.forEach(folder => {
+      expandedFolders.value.add(folder.id)
+    })
   } catch (error) {
     console.error('获取视图列表失败:', error)
-    MessagePlugin.error('获取视图列表失败')
+    // 发生错误时也使用假数据
+    viewFolders.value = [
+      { id: 'folder-1', name: '项目管理' }
+    ]
+    myViews.value = [
+      { id: 'view-gantt', name: '项目进度', type: 'gantt', folderId: 'folder-1' },
+      { id: 'view-board', name: '任务分配', type: 'board', folderId: 'folder-1' },
+      { id: 'view-calendar', name: '项目日历', type: 'calendar', folderId: 'folder-1' }
+    ]
+    
+    // 默认展开所有文件夹
+    viewFolders.value.forEach(folder => {
+      expandedFolders.value.add(folder.id)
+    })
   } finally {
     viewsLoading.value = false
   }
@@ -1252,16 +1330,13 @@ const handleCreateViewGroup = () => {
 const loadViewFolders = async () => {
   try {
     console.log('[加载文件夹列表] 开始')
-    const res = await getViewFolderList()
+    // 使用假数据代替 API 调用
+    const mockFolders = [
+      { id: 'folder-1', name: '项目管理' }
+    ]
 
-    console.log('[加载文件夹列表] 响应:', res)
-
-    if (res.success || res.code === 200) {
-      viewFolders.value = res.data || []
-      console.log('[加载文件夹列表] 成功，数量:', viewFolders.value.length)
-    } else {
-      console.error('获取文件夹列表失败:', res.message)
-    }
+    viewFolders.value = mockFolders
+    console.log('[加载文件夹列表] 成功，数量:', mockFolders.length)
   } catch (error) {
     console.error('[加载文件夹列表] 失败:', error)
   }
@@ -1651,6 +1726,11 @@ onUnmounted(() => {
   &.has-secondary {
     width: 280px;
   }
+  
+  // 工作台菜单时增加宽度
+  &.has-secondary:has(.secondary-menu.is-workspace) {
+    width: 320px;
+  }
 }
 
 // 菜单区域
@@ -1668,6 +1748,11 @@ onUnmounted(() => {
 
   &.has-secondary {
     width: 280px;
+  }
+  
+  // 工作台菜单时增加宽度
+  &.has-secondary:has(.secondary-menu.is-workspace) {
+    width: 320px;
   }
 }
 
@@ -1774,6 +1859,12 @@ onUnmounted(() => {
     min-width: 300px;
   }
 
+  // 工作台菜单（我的事项）需要更宽
+  &.is-workspace {
+    width: 240px;
+    min-width: 240px;
+  }
+
   // 视图加载中容器
   .views-loading-container {
     position: absolute;
@@ -1842,12 +1933,45 @@ onUnmounted(() => {
         flex-shrink: 0;
       }
 
+      .item-label-wrapper {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        min-width: 0; // 允许 flex 子元素收缩
+        overflow: hidden;
+        max-width: calc(100% - 40px); // 为操作按钮预留空间，减少距离
+      }
+
       .item-label {
         font-size: 13px;
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        min-width: 0; // 允许 flex 子元素收缩
+      }
+
+      .view-count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 18px;
+        padding: 0 7px;
+        background: #e6f4ff;
+        border-radius: 10px;
+        color: #0052d9;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 4px;
+        white-space: nowrap;
+        line-height: 1;
+        transition: all 0.2s;
+      }
+      
+      // 鼠标悬停时稍微加深背景
+      .secondary-menu-item:hover .view-count-badge {
+        background: #cce7ff;
       }
 
       // 缩进的菜单项（视图列表和文件夹）
@@ -1877,6 +2001,18 @@ onUnmounted(() => {
         .t-icon {
           color: #667eea;
         }
+
+        .item-label {
+          flex: 1 1 auto; // 允许文件夹名称占据更多空间
+          min-width: 80px; // 确保文件夹名称有最小宽度
+        }
+
+        // 文件夹选中时，图标颜色与普通菜单项一致
+        &.is-active {
+          .t-icon {
+            color: #1f2329;
+          }
+        }
       }
 
       // 不可点击的菜单项
@@ -1893,6 +2029,8 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         gap: 4px;
+        margin-left: 8px; // 减少与文字的距离
+        flex-shrink: 0; // 防止按钮被压缩
 
         .action-icon {
           color: #646a73;
@@ -1925,11 +2063,11 @@ onUnmounted(() => {
       }
 
       &.is-active {
-        background: linear-gradient(135deg, #f0f5ff 0%, #e6f0ff 100%);
-        color: #0052d9;
+        background: #e8e8e8;
+        color: #1f2329;
 
         .t-icon {
-          color: #0052d9;
+          color: #1f2329;
         }
       }
 

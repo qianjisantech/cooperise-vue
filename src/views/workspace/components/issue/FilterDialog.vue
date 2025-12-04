@@ -60,10 +60,10 @@
             size="small"
             class="filter-value"
           >
-            <t-option label="1" value="待处理" />
-            <t-option label="2" value="进行中" />
-            <t-option label="3" value="已完成" />
-            <t-option label="0" value="已关闭" />
+            <t-option label="待处理" value="1" />
+            <t-option label="进行中" value="2" />
+            <t-option label="待审核" value="3" />
+            <t-option label="已完成" value="0" />
           </t-select>
 
           <!-- 优先级选择 -->

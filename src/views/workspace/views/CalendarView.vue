@@ -31,6 +31,11 @@
             日
           </t-button>
         </t-space>
+        <t-button theme="default" size="medium" @click="handleFilter">
+          <template #icon><t-icon name="filter" /></template>
+          筛选
+          <t-badge v-if="activeFilterCount > 0" :count="activeFilterCount" :offset="[-6, 6]" />
+        </t-button>
         <t-button theme="default" size="medium" @click="goToToday">
           今天
         </t-button>
@@ -218,6 +223,14 @@
       :event="editingEvent"
       @save="handleSaveEvent"
     />
+
+    <!-- 筛选弹窗 -->
+    <FilterDialog
+      v-model="filterVisible"
+      :filter-conditions="filterConditions"
+      :filtered-count="allEvents.length"
+      @update:filter-conditions="handleFilterUpdate"
+    />
   </div>
 </template>
 
@@ -226,6 +239,7 @@ import { ref, computed, defineProps, watch } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import EventDetailDialog from './components/EventDetailDialog.vue'
 import EventEditDialog from './components/EventEditDialog.vue'
+import FilterDialog from '@/views/workspace/components/issue/FilterDialog.vue'
 
 const props = defineProps({
   viewData: {
@@ -250,30 +264,108 @@ const editEventVisible = ref(false)
 const editingEvent = ref(null)
 const activeTab = ref('basic')
 
-// 筛选条件 - 已选中的成员列表
+// 筛选相关
+const filterVisible = ref(false)
+const filterConditions = ref([
+  { id: 0, field: 'keyword', value: '' }
+])
+let filterIdCounter = 1
+
+// 计算有效的筛选条件数量
+const activeFilterCount = computed(() => {
+  return filterConditions.value.filter(condition => condition.value).length
+})
+
+// 筛选条件 - 已选中的成员列表（保留用于成员筛选）
 const selectedAssignees = ref([])
 
 // 星期标题
 const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-// 成员颜色配置 - 使用低饱和度颜色
+// 成员颜色配置 - 使用柔和的暖色调（降低饱和度和亮度）
 const assigneeColors = {
-  'Admin': '#ffb3b3',
-  'Tester1': '#a8ddd8',
-  'Tester2': '#9bd4e0',
-  'Developer1': '#fce89d',
-  'Developer2': '#d4cffe',
-  'default': '#c5d5db'
+  '张三': '#F5C2B8',      // 柔和的粉红
+  '李四': '#F5B89C',      // 柔和的橙红
+  '王五': '#E8D4A0',      // 柔和的米黄色
+  '赵六': '#F5A082',      // 柔和的鲑鱼色
+  '孙七': '#F5C88C',      // 柔和的橙色
+  '周八': '#F5B0C8',      // 柔和的粉红
+  'Admin': '#F5C2B8',
+  'Tester1': '#F5B89C',
+  'Tester2': '#E8D4A0',
+  'Developer1': '#F5A082',
+  'Developer2': '#F5C88C',
+  '未分配': '#F0E6E3',    // 非常柔和的灰粉色
+  'default': '#F0E8D8'    // 柔和的米白色
 }
 
-// 获取成员颜色
+// 获取成员颜色（如果找不到对应颜色，根据名称生成一个柔和的暖色）
 const getAssigneeColor = (assignee) => {
-  return assigneeColors[assignee] || assigneeColors.default
+  if (assigneeColors[assignee]) {
+    return assigneeColors[assignee]
+  }
+  // 如果找不到，根据名称生成一个柔和的暖色（使用简单的哈希）
+  if (assignee && assignee !== '未分配') {
+    const warmColors = [
+      '#F5C2B8', // 柔和的粉红
+      '#F5B89C', // 柔和的橙红
+      '#E8D4A0', // 柔和的米黄色
+      '#F5A082', // 柔和的鲑鱼色
+      '#F5C88C', // 柔和的橙色
+      '#F5B0C8', // 柔和的粉红
+      '#F0D4C8', // 柔和的桃色
+      '#F5C8A8', // 柔和的珊瑚色
+      '#F0E0D0', // 柔和的米色
+      '#F0E8D8'  // 柔和的米白色
+    ]
+    let hash = 0
+    for (let i = 0; i < assignee.length; i++) {
+      hash = assignee.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return warmColors[Math.abs(hash) % warmColors.length]
+  }
+  return assigneeColors.default
 }
 
-// 从接口获取原始事项数据并转换为日历事件格式
-const allEvents = computed(() => {
+// 筛选后的事项数据
+const filteredIssues = computed(() => {
   const issues = props.issueData?.records || []
+  
+  return issues.filter(issue => {
+    // 遍历所有筛选条件
+    for (const condition of filterConditions.value) {
+      if (!condition.value) continue // 跳过空值
+
+      const field = condition.field
+      const value = condition.value
+
+      if (field === 'keyword') {
+        // 关键词筛选（搜索标题或单号）
+        const keyword = value.toLowerCase()
+        const matchTitle = issue.title?.toLowerCase().includes(keyword)
+        const matchNumber = issue.issueNo?.toLowerCase().includes(keyword)
+        if (!matchTitle && !matchNumber) return false
+      } else if (field === 'status') {
+        // 状态筛选
+        const statusValue = typeof value === 'string' ? parseInt(value) : value
+        if (issue.status !== statusValue) return false
+      } else if (field === 'priority') {
+        // 优先级筛选
+        if (issue.priority !== value) return false
+      } else if (field === 'assignee') {
+        // 经办人筛选
+        const assigneeName = issue.assigneeName || issue.assignee_name || '未分配'
+        if (assigneeName !== value) return false
+      }
+    }
+
+    return true
+  })
+})
+
+// 从筛选后的事项数据转换为日历事件格式
+const allEvents = computed(() => {
+  const issues = filteredIssues.value
 
   // 将事项转换为日历事件格式
   return issues.map(issue => {
@@ -663,6 +755,15 @@ const nextPeriod = () => {
 }
 
 // 点击事项
+const handleFilter = () => {
+  filterVisible.value = true
+}
+
+const handleFilterUpdate = (conditions) => {
+  filterConditions.value = conditions
+  filterIdCounter = Math.max(...conditions.map(c => c.id), 0) + 1
+}
+
 const handleEventClick = (event) => {
   currentEvent.value = event
   eventDetailVisible.value = true

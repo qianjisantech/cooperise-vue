@@ -7,7 +7,7 @@
           <div class="task-header">
             <div class="header-left">
               <div class="title-info">
-                <h3 class="task-title">我的事项</h3>
+                <h3 class="task-title">我的关注</h3>
                 <span class="task-count">共 {{ pagination.total }} 条</span>
               </div>
               <div class="left-actions">
@@ -535,6 +535,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import { useWorkspaceStore } from '@/store/workspace.js'
+import { useUserStore } from '@/store/user.js'
 import { getIssueList, getIssueDetail, updateIssue, deleteIssue } from '@/api/workspace.js'
 import { getUserList } from '@/api/user.js'
 import { getSpaceList } from '@/api/space.js'
@@ -904,16 +905,20 @@ const visibleColumns = computed(() => {
   return cols
 })
 
-// 我的事项列表
+// 我的关注列表
 const issueList = ref([])
 
 // 获取任务列表
 const fetchIssueList = async () => {
   try {
     loading.value = true
+    // 获取当前用户ID
+    const userStore = useUserStore()
+    const currentUserId = userStore.userInfo?.id
     const res = await getIssueList({
       current: pagination.value.current,
-      size: pagination.value.pageSize
+      size: pagination.value.pageSize,
+      watcherId: currentUserId // 只获取当前用户关注的事项
     })
     if (res.success) {
       issueList.value = res.data.records || res.data.list || []
@@ -993,7 +998,7 @@ onMounted(async () => {
 
 // 监听路由变化，从筛选器页面返回时重新加载筛选条件
 watch(() => route.path, (newPath) => {
-  if (newPath === '/workspace/issue') {
+  if (newPath === '/workspace/my-watched') {
     reloadFilterConditions()
   }
 })
@@ -1519,7 +1524,7 @@ const handleDelete = (row) => {
 }
 
 // 列配置存储键
-const COLUMN_CONFIG_KEY = 'issue_list_columns'
+const COLUMN_CONFIG_KEY = 'my_watched_list_columns'
 
 // 初始化列配置
 const initColumnConfig = async () => {

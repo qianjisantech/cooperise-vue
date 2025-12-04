@@ -6,6 +6,7 @@
         <t-button class="filter-btn" theme="default" size="medium" @click="handleFilter">
           <template #icon><t-icon name="filter" /></template>
           筛选
+          <t-badge v-if="activeFilterCount > 0" :count="activeFilterCount" :offset="[-6, 6]" />
         </t-button>
         <t-button theme="default" size="medium" @click="handleRefresh">
           <template #icon><t-icon name="refresh" /></template>
@@ -45,11 +46,21 @@
           </div>
 
           <!-- 卡片列表 -->
-          <div class="column-cards">
+          <div
+            class="column-cards"
+            :class="{ 'drag-over': dragOverColumnId === column.id }"
+            @dragover.prevent="handleDragOver($event, column)"
+            @dragleave="handleDragLeave($event, column)"
+            @drop.prevent="handleDrop($event, column)"
+          >
             <div
               v-for="item in column.items"
               :key="item.id"
               class="kanban-card"
+              :class="{ 'dragging': draggingCardId === item.id }"
+              draggable="true"
+              @dragstart="handleDragStart($event, item, column)"
+              @dragend="handleDragEnd"
               @click="handleCardClick(item)"
             >
               <div class="card-header">
@@ -101,75 +112,20 @@
     </div>
 
     <!-- 筛选弹窗 -->
-    <t-dialog
-      v-model:visible="filterVisible"
-      header="筛选条件"
-      width="500px"
-      :footer="true"
-      @confirm="handleFilterConfirm"
-      @cancel="filterVisible = false"
-    >
-      <div class="filter-content">
-        <div class="filter-item">
-          <label class="filter-label">优先级</label>
-          <t-checkbox-group v-model="filterOptions.priority">
-            <t-checkbox value="高">高</t-checkbox>
-            <t-checkbox value="中">中</t-checkbox>
-            <t-checkbox value="低">低</t-checkbox>
-          </t-checkbox-group>
-        </div>
-
-        <div class="filter-item">
-          <label class="filter-label">负责人</label>
-          <t-select
-            v-model="filterOptions.assignee"
-            placeholder="请选择负责人"
-            clearable
-            multiple
-          >
-            <t-option value="Admin" label="Admin" />
-            <t-option value="Tester1" label="Tester1" />
-            <t-option value="Tester2" label="Tester2" />
-          </t-select>
-        </div>
-
-        <div class="filter-item">
-          <label class="filter-label">标签</label>
-          <t-select
-            v-model="filterOptions.tags"
-            placeholder="请选择标签"
-            clearable
-            multiple
-          >
-            <t-option value="前端" label="前端" />
-            <t-option value="后端" label="后端" />
-            <t-option value="UI" label="UI" />
-            <t-option value="优化" label="优化" />
-            <t-option value="设计" label="设计" />
-            <t-option value="架构" label="架构" />
-            <t-option value="文档" label="文档" />
-            <t-option value="代码审查" label="代码审查" />
-            <t-option value="Bug修复" label="Bug修复" />
-            <t-option value="维护" label="维护" />
-          </t-select>
-        </div>
-
-        <div class="filter-item">
-          <label class="filter-label">截止日期</label>
-          <t-date-range-picker
-            v-model="filterOptions.dateRange"
-            placeholder="请选择日期范围"
-            clearable
-          />
-        </div>
-      </div>
-    </t-dialog>
+    <FilterDialog
+      v-model="filterVisible"
+      :filter-conditions="filterConditions"
+      :filtered-count="filteredKanbanItems.length"
+      @update:filter-conditions="handleFilterUpdate"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
+import FilterDialog from '@/views/workspace/components/issue/FilterDialog.vue'
+import { updateIssue } from '@/api/workspace'
 
 const props = defineProps({
   viewData: {
@@ -191,27 +147,86 @@ const emit = defineEmits(['refresh'])
 // 筛选弹窗状态
 const filterVisible = ref(false)
 
-// 筛选选项
-const filterOptions = ref({
-  priority: [],
-  assignee: [],
-  tags: [],
-  dateRange: []
+// 拖拽相关状态
+const draggingCardId = ref(null)
+const draggingCard = ref(null)
+const draggingFromColumn = ref(null)
+const dragOverColumnId = ref(null)
+
+// 筛选条件
+const filterConditions = ref([
+  { id: 0, field: 'keyword', value: '' }
+])
+let filterIdCounter = 1
+
+// 计算有效的筛选条件数量
+const activeFilterCount = computed(() => {
+  return filterConditions.value.filter(condition => condition.value).length
 })
 
 // 状态映射配置（匹配后端Integer状态）
 const statusColumns = [
-  { id: 'TODO', name: '待处理', status: 1 },
-  { id: 'IN_PROGRESS', name: '进行中', status: 2 },
-  { id: 'REVIEW', name: '待审核', status: 3 },
-  { id: 'DONE', name: '已完成', status: 0 }
+  { id: 'PENDING_ANALYSIS', name: '待分析', status: 1 },
+  { id: 'PENDING_DESIGN', name: '待设计', status: 2 },
+  { id: 'PENDING_REVIEW', name: '待评审', status: 3 },
+  { id: 'PENDING_SCHEDULE', name: '待排期', status: 4 },
+  { id: 'PENDING_DEVELOP', name: '待开发', status: 5 },
+  { id: 'DEVELOPING', name: '开发中', status: 6 },
+  { id: 'SUBMITTED_TEST', name: '已提测', status: 7 },
+  { id: 'TESTING', name: '测试中', status: 8 },
+  { id: 'TEST_COMPLETED', name: '测试完成', status: 9 },
+  { id: 'PENDING_ACCEPTANCE', name: '待验收', status: 10 },
+  { id: 'ACCEPTING', name: '验收中', status: 11 },
+  { id: 'PENDING_RELEASE', name: '待发布', status: 12 },
+  { id: 'RELEASED', name: '已发布', status: 0 }
 ]
+
+// 筛选后的事项列表
+const filteredIssues = computed(() => {
+  const issues = props.issueData?.records || []
+  
+  return issues.filter(issue => {
+    // 遍历所有筛选条件
+    for (const condition of filterConditions.value) {
+      if (!condition.value) continue // 跳过空值
+
+      const field = condition.field
+      const value = condition.value
+
+      if (field === 'keyword') {
+        // 关键词筛选（搜索概要或单号）
+        const keyword = value.toLowerCase()
+        const matchSummary = issue.summary?.toLowerCase().includes(keyword)
+        const matchNumber = issue.issue_no?.toLowerCase().includes(keyword)
+        if (!matchSummary && !matchNumber) return false
+      } else if (field === 'status') {
+        // 状态筛选
+        const statusValue = typeof value === 'string' ? parseInt(value) : value
+        if (issue.status !== statusValue) return false
+      } else if (field === 'priority') {
+        // 优先级筛选
+        if (issue.priority !== value) return false
+      } else if (field === 'assignee') {
+        // 经办人筛选
+        const assigneeName = issue.assignee_name || issue.assigneeName || '未分配'
+        if (assigneeName !== value) return false
+      }
+    }
+
+    return true
+  })
+})
+
+// 计算筛选后的所有事项数量（用于统计）
+const filteredKanbanItems = computed(() => {
+  return filteredIssues.value
+})
 
 // 根据事项数据生成看板列
 const kanbanColumns = computed(() => {
-  const issues = props.issueData?.records || []
+  const issues = filteredIssues.value
 
-  console.log('[看板视图] 收到的事项数据:', issues)
+  console.log('[看板视图] 筛选后的事项数据:', issues)
 
   return statusColumns.map(column => {
     // 筛选出对应状态的事项
@@ -273,10 +288,9 @@ const handleFilter = () => {
   filterVisible.value = true
 }
 
-const handleFilterConfirm = () => {
-  console.log('筛选条件:', filterOptions.value)
-  MessagePlugin.success('筛选条件已应用')
-  filterVisible.value = false
+const handleFilterUpdate = (conditions) => {
+  filterConditions.value = conditions
+  filterIdCounter = Math.max(...conditions.map(c => c.id), 0) + 1
 }
 
 const handleRefresh = () => {
@@ -302,6 +316,92 @@ const handleAddCard = (column) => {
 
 const handleCardClick = (item) => {
   MessagePlugin.info(`查看卡片: ${item.title}`)
+}
+
+// 拖拽开始
+const handleDragStart = (event, item, column) => {
+  draggingCardId.value = item.id
+  draggingCard.value = item
+  draggingFromColumn.value = column
+  
+  // 设置拖拽数据
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', item.id)
+  
+  // 添加拖拽样式
+  event.target.style.opacity = '0.5'
+}
+
+// 拖拽悬停
+const handleDragOver = (event, column) => {
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'move'
+  
+  // 如果拖拽到不同的列，高亮显示
+  if (draggingFromColumn.value && draggingFromColumn.value.id !== column.id) {
+    dragOverColumnId.value = column.id
+  }
+}
+
+// 拖拽离开
+const handleDragLeave = (event, column) => {
+  // 检查是否真的离开了列区域（而不是进入子元素）
+  const rect = event.currentTarget.getBoundingClientRect()
+  const x = event.clientX
+  const y = event.clientY
+  
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    dragOverColumnId.value = null
+  }
+}
+
+// 放置卡片
+const handleDrop = async (event, targetColumn) => {
+  event.preventDefault()
+  
+  if (!draggingCard.value || !draggingFromColumn.value) {
+    return
+  }
+  
+  // 如果拖拽到同一列，不处理
+  if (draggingFromColumn.value.id === targetColumn.id) {
+    dragOverColumnId.value = null
+    return
+  }
+  
+  // 更新卡片状态
+  const newStatus = targetColumn.status
+  const cardId = draggingCard.value.id
+  
+  try {
+    // 调用 API 更新事项状态
+    const res = await updateIssue(cardId, { status: newStatus })
+    
+    if (res.success || res.code === 200) {
+      MessagePlugin.success(`已将事项移动到"${targetColumn.name}"`)
+      // 触发刷新
+      emit('refresh')
+    } else {
+      MessagePlugin.error(res.message || '更新事项状态失败')
+    }
+  } catch (error) {
+    console.error('更新事项状态失败:', error)
+    MessagePlugin.error('更新事项状态失败，请重试')
+  } finally {
+    dragOverColumnId.value = null
+  }
+}
+
+// 拖拽结束
+const handleDragEnd = (event) => {
+  // 恢复样式
+  event.target.style.opacity = '1'
+  
+  // 重置拖拽状态
+  draggingCardId.value = null
+  draggingCard.value = null
+  draggingFromColumn.value = null
+  dragOverColumnId.value = null
 }
 </script>
 
@@ -420,6 +520,14 @@ const handleCardClick = (item) => {
           display: flex;
           flex-direction: column;
           gap: 12px;
+          min-height: 100px;
+          transition: background-color 0.2s;
+          
+          &.drag-over {
+            background-color: rgba(102, 126, 234, 0.05);
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+          }
 
           &::-webkit-scrollbar {
             width: 6px;
@@ -434,14 +542,24 @@ const handleCardClick = (item) => {
             background: #fff;
             border-radius: 8px;
             padding: 14px;
-            cursor: pointer;
+            cursor: grab;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+            user-select: none;
 
             &:hover {
               box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
               transform: translateY(-3px);
               border: 1px solid rgba(102, 126, 234, 0.1);
+            }
+
+            &:active {
+              cursor: grabbing;
+            }
+
+            &.dragging {
+              opacity: 0.5;
+              transform: rotate(3deg);
             }
 
             .card-header {

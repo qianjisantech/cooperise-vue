@@ -1,6 +1,6 @@
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
-    -system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -system-ui, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
@@ -10,6 +10,24 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 浏览器兼容性 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  /* 响应式字体大小 */
+  font-size: 14px;
+}
+
+/* 响应式字体大小 */
+@media (max-width: 768px) {
+  :root {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 12px;
+  }
 }
 
 *,
@@ -18,27 +36,70 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  /* 浏览器兼容性 */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  /* 平滑滚动 */
+  scroll-behavior: smooth;
+  /* 移动端优化 */
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-}
-
-body {
+  /* 浏览器兼容性 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 背景渐变 - 添加浏览器前缀 */
+  background: #f5f7fa;
+  background: -webkit-radial-gradient(circle at top left, #f9fbff 0, #f3f5f9 45%, #eef1f6 100%);
+  background: -moz-radial-gradient(circle at top left, #f9fbff 0, #f3f5f9 45%, #eef1f6 100%);
   background: radial-gradient(circle at top left, #f9fbff 0, #f3f5f9 45%, #eef1f6 100%);
   color: #1f2329;
+  /* 移动端优化 */
+  -webkit-tap-highlight-color: transparent;
+  /* 防止文本选择（可选） */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* 允许输入框文本选择 */
+  input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
 }
 
 #app {
   width: 100%;
   height: 100%;
+  /* 浏览器兼容性 */
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* iOS Safari */
+  /* 防止内容溢出 */
+  overflow-x: hidden;
+  /* 硬件加速 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+  /* 浏览器兼容性 */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  /* 移动端优化 */
+  cursor: pointer;
 }
 
 a:hover {
@@ -46,7 +107,353 @@ a:hover {
   text-decoration-style: dotted;
 }
 
+a:active {
+  opacity: 0.8;
+}
+
 button {
   font-family: inherit;
+  /* 浏览器兼容性 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* 移动端优化 */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  /* 防止按钮文字选择 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 响应式图片 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 响应式表格 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  /* 移动端表格优化 */
+  @media (max-width: 768px) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 输入框浏览器兼容性 */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  /* 浏览器兼容性 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* 移动端优化 */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 滚动条样式 - 跨浏览器兼容 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox 滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* 响应式断点工具类 */
+@media (max-width: 1920px) {
+  /* 大屏显示器 */
+}
+
+@media (max-width: 1440px) {
+  /* 标准桌面 */
+}
+
+@media (max-width: 1024px) {
+  /* 平板横屏 */
+}
+
+@media (max-width: 768px) {
+  /* 平板竖屏 / 大屏手机 */
+}
+
+@media (max-width: 480px) {
+  /* 手机 */
+}
+
+@media (max-width: 360px) {
+  /* 小屏手机 */
+}
+
+/* 横屏适配 */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 移动端横屏 */
+}
+
+/* 高DPI屏幕适配 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Retina 屏幕 */
+}
+
+/* ========== 响应式工具类 ========== */
+
+/* 显示/隐藏工具类 */
+.show-on-mobile {
+  display: none;
+}
+
+.hide-on-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .show-on-mobile {
+    display: block;
+  }
+  
+  .hide-on-mobile {
+    display: none;
+  }
+}
+
+/* 文本对齐工具类 */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .text-center-mobile {
+    text-align: center;
+  }
+}
+
+/* 间距工具类 */
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }
+
+/* 响应式间距 */
+@media (max-width: 768px) {
+  .mt-3 { margin-top: 16px; }
+  .mt-4 { margin-top: 24px; }
+  .mb-3 { margin-bottom: 16px; }
+  .mb-4 { margin-bottom: 24px; }
+  .p-3 { padding: 16px; }
+  .p-4 { padding: 24px; }
+}
+
+/* Flex 布局工具类 */
+.flex {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-column {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.justify-center {
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.justify-between {
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.align-center {
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+/* 宽度工具类 */
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .w-full-mobile {
+    width: 100%;
+  }
+}
+
+/* 清除浮动 */
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* 浏览器兼容性修复 */
+/* IE11 Flexbox 兼容 */
+.flex-ie11 {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+/* 过渡动画浏览器兼容 */
+.transition {
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+/* 变换浏览器兼容 */
+.transform {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* 阴影浏览器兼容 */
+.shadow {
+  -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== 浏览器特定样式 ========== */
+
+/* IE11 特定样式 */
+.browser-ie {
+  /* IE11 可能需要特殊处理 */
+}
+
+/* 移动设备特定样式 */
+.device-mobile {
+  /* 移动端优化 */
+}
+
+.device-mobile * {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 屏幕尺寸特定样式 */
+.screen-xs {
+  /* 超小屏手机 */
+}
+
+.screen-sm {
+  /* 小屏手机 */
+}
+
+.screen-md {
+  /* 平板 */
+}
+
+.screen-lg {
+  /* 桌面 */
+}
+
+.screen-xl {
+  /* 大屏桌面 */
+}
+
+/* ========== 触摸设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  /* 触摸设备 */
+  button, a, .t-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 增大触摸目标间距 */
+  .touch-target {
+    padding: 12px;
+    margin: 4px;
+  }
+}
+
+/* ========== 高对比度模式支持 ========== */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+  
+  button, a {
+    border: 2px solid currentColor;
+  }
+}
+
+/* ========== 减少动画模式支持 ========== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

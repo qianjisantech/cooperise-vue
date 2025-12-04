@@ -43,8 +43,15 @@ const handleSecondaryChange = (isShow) => {
 
 // 根据二级菜单状态动态计算内容区域的左边距
 const sidebarWidth = computed(() => {
-  // 如果是发布日志，二级菜单宽度为 300px，否则为 280px
-  const secondaryWidth = route.path.startsWith('/changelog') ? '300px' : '280px'
+  // 如果是发布日志，二级菜单宽度为 300px
+  // 如果是工作台（我的事项），二级菜单宽度为 320px
+  // 否则为 280px
+  let secondaryWidth = '280px'
+  if (route.path.startsWith('/changelog')) {
+    secondaryWidth = '300px'
+  } else if (route.path.startsWith('/workspace')) {
+    secondaryWidth = '320px'
+  }
   const width = hasSecondary.value ? secondaryWidth : '80px'
   const viewportWidth = window.innerWidth
 

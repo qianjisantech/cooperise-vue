@@ -43,6 +43,11 @@
             月
           </t-button>
         </t-space>
+        <t-button theme="default" size="medium" @click="handleFilter">
+          <template #icon><t-icon name="filter" /></template>
+          筛选
+          <t-badge v-if="activeFilterCount > 0" :count="activeFilterCount" :offset="[-6, 6]" />
+        </t-button>
         <t-button theme="default" size="medium" @click="handleToday">
           今天
         </t-button>
@@ -76,9 +81,13 @@
                 <span>{{ task.name }}</span>
               </div>
               <div class="column assignee">
-                <t-avatar v-if="task.assignee" size="24px">
-                  {{ task.assignee.charAt(0) }}
-                </t-avatar>
+                <div v-if="task.assignee && task.assignee !== '未分配'" class="assignee-info">
+                  <t-avatar size="24px">
+                    {{ task.assignee.charAt(0) }}
+                  </t-avatar>
+                  <span class="assignee-text">{{ task.assigneeDisplay }}</span>
+                </div>
+                <span v-else class="assignee-text no-assignee">未分配</span>
               </div>
               <div class="column duration">{{ task.duration }}天</div>
             </div>
@@ -114,12 +123,36 @@
         </div>
       </div>
     </div>
+
+    <!-- 筛选弹窗 -->
+    <FilterDialog
+      v-model="filterVisible"
+      :filter-conditions="filterConditions"
+      :filtered-count="filteredGanttTasks.length"
+      @update:filter-conditions="handleFilterUpdate"
+    />
+
+    <!-- 分页组件 -->
+    <div class="pagination-container">
+      <t-pagination
+        v-model="pagination.current"
+        v-model:page-size="pagination.pageSize"
+        :total="pagination.total"
+        :page-size-options="[10, 20, 50]"
+        show-page-size
+        show-page-number
+        show-jumper
+        @change="handlePageChange"
+        @page-size-change="handlePageSizeChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, computed, watch, defineProps, defineEmits } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
+import FilterDialog from '@/views/workspace/components/issue/FilterDialog.vue'
 
 const props = defineProps({
   viewData: {
@@ -139,6 +172,25 @@ const props = defineProps({
 const emit = defineEmits(['refresh'])
 
 const timeScale = ref('day')
+
+// 分页相关
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0
+})
+
+// 筛选相关
+const filterVisible = ref(false)
+const filterConditions = ref([
+  { id: 0, field: 'keyword', value: '' }
+])
+let filterIdCounter = 1
+
+// 计算有效的筛选条件数量
+const activeFilterCount = computed(() => {
+  return filterConditions.value.filter(condition => condition.value).length
+})
 
 // 状态映射（匹配后端Integer状态）
 const statusMap = {
@@ -168,21 +220,88 @@ const calculateDuration = (startDate, endDate) => {
   return diff > 0 ? diff : 1
 }
 
-// 甘特图任务数据（从事项数据转换）
-const ganttTasks = computed(() => {
+// 原始任务数据（从事项数据转换）
+const rawGanttTasks = computed(() => {
   const issues = props.issueData?.records || []
 
-  return issues.map(issue => ({
-    id: issue.id,
-    name: issue.title || '无标题',
-    level: 0,
-    startDate: issue.startDate || issue.createTime,
-    endDate: issue.dueDate || issue.startDate || issue.createTime,
-    duration: calculateDuration(issue.startDate || issue.createTime, issue.dueDate || issue.startDate || issue.createTime),
-    assignee: issue.assigneeName || '未分配',
-    progress: calculateProgress(issue.status),
-    status: statusMap[issue.status] || 'pending'
-  }))
+  return issues.map(issue => {
+    const assigneeName = issue.assigneeName || issue.assignee_name || '未分配'
+    const employeeNo = issue.employeeNo || issue.employee_no || ''
+    const assigneeDisplay = assigneeName === '未分配' 
+      ? '未分配' 
+      : employeeNo 
+        ? `${assigneeName}(${employeeNo})` 
+        : assigneeName
+
+    return {
+      id: issue.id,
+      name: issue.title || '无标题',
+      level: 0,
+      startDate: issue.startDate || issue.createTime,
+      endDate: issue.dueDate || issue.startDate || issue.createTime,
+      duration: calculateDuration(issue.startDate || issue.createTime, issue.dueDate || issue.startDate || issue.createTime),
+      assignee: assigneeName,
+      assigneeDisplay: assigneeDisplay,
+      employeeNo: employeeNo,
+      progress: calculateProgress(issue.status),
+      status: statusMap[issue.status] || 'pending',
+      // 用于筛选的原始数据
+      originalIssue: issue
+    }
+  })
+})
+
+// 筛选后的甘特图任务数据
+const filteredGanttTasks = computed(() => {
+  return rawGanttTasks.value.filter(task => {
+    // 遍历所有筛选条件
+    for (const condition of filterConditions.value) {
+      if (!condition.value) continue // 跳过空值
+
+      const field = condition.field
+      const value = condition.value
+      const issue = task.originalIssue
+
+      if (field === 'keyword') {
+        // 关键词筛选（搜索标题或单号）
+        const keyword = value.toLowerCase()
+        const matchTitle = task.name?.toLowerCase().includes(keyword)
+        const matchNumber = issue.issueNo?.toLowerCase().includes(keyword)
+        if (!matchTitle && !matchNumber) return false
+      } else if (field === 'status') {
+        // 状态筛选
+        const statusValue = typeof value === 'string' ? parseInt(value) : value
+        if (issue.status !== statusValue) return false
+      } else if (field === 'priority') {
+        // 优先级筛选
+        if (issue.priority !== value) return false
+      } else if (field === 'assignee') {
+        // 经办人筛选
+        if (task.assignee !== value) return false
+      }
+    }
+
+    return true
+  })
+})
+
+// 更新分页总数（使用 watch 监听筛选后的数据变化）
+watch(filteredGanttTasks, (newTasks) => {
+  pagination.value.total = newTasks.length
+  // 如果当前页超出范围，重置到第一页
+  const maxPage = Math.ceil(newTasks.length / pagination.value.pageSize) || 1
+  if (pagination.value.current > maxPage) {
+    pagination.value.current = 1
+  }
+}, { immediate: true })
+
+// 甘特图任务数据（使用筛选后的数据，并应用分页）
+const ganttTasks = computed(() => {
+  const filtered = filteredGanttTasks.value
+  // 计算分页
+  const start = (pagination.value.current - 1) * pagination.value.pageSize
+  const end = start + pagination.value.pageSize
+  return filtered.slice(start, end)
 })
 
 // 计算时间轴的起止日期
@@ -262,8 +381,26 @@ const handleToday = () => {
   MessagePlugin.success('跳转到今天')
 }
 
-const handleAddTask = () => {
-  MessagePlugin.info('添加任务')
+const handleFilter = () => {
+  filterVisible.value = true
+}
+
+const handleFilterUpdate = (conditions) => {
+  filterConditions.value = conditions
+  filterIdCounter = Math.max(...conditions.map(c => c.id), 0) + 1
+  // 筛选后重置到第一页
+  pagination.value.current = 1
+}
+
+// 处理页码变化
+const handlePageChange = (pageInfo) => {
+  pagination.value.current = pageInfo.current
+}
+
+// 处理每页条数变化
+const handlePageSizeChange = (size) => {
+  pagination.value.pageSize = size
+  pagination.value.current = 1
 }
 </script>
 
@@ -274,6 +411,7 @@ const handleAddTask = () => {
   display: flex;
   flex-direction: column;
   background: #fff;
+  padding-bottom: 10px;
 
   .view-header {
     display: flex;
@@ -339,13 +477,15 @@ const handleAddTask = () => {
 
   .gantt-content {
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
     display: flex;
+    min-height: 0;
 
-    .gantt-container {
-      display: flex;
-      width: 100%;
-      height: 100%;
+      .gantt-container {
+        display: flex;
+        width: 100%;
+        height: fit-content;
+        min-height: 0;
 
       // 左侧任务列表
       .task-list {
@@ -374,8 +514,8 @@ const handleAddTask = () => {
             }
 
             &.assignee {
-              width: 80px;
-              text-align: center;
+              width: 180px;
+              text-align: left;
             }
 
             &.duration {
@@ -424,8 +564,27 @@ const handleAddTask = () => {
               }
 
               &.assignee {
-                width: 80px;
-                justify-content: center;
+                width: 180px;
+                justify-content: flex-start;
+                gap: 8px;
+
+                .assignee-info {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                }
+
+                .assignee-text {
+                  font-size: 13px;
+                  color: #1f2329;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+
+                  &.no-assignee {
+                    color: #8a8e99;
+                  }
+                }
               }
 
               &.duration {
@@ -486,7 +645,7 @@ const handleAddTask = () => {
 
         .gantt-bars {
           position: relative;
-          min-height: 100%;
+          min-height: auto;
 
           .bar-row {
             height: 50px;
@@ -555,6 +714,17 @@ const handleAddTask = () => {
         }
       }
     }
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 16px 24px 10px;
+    margin-top: 16px;
+    border-top: 1px solid #e7e7e7;
+    background: #fff;
+    flex-shrink: 0;
   }
 }
 </style>

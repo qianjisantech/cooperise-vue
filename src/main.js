@@ -34,4 +34,16 @@ import tracking, { setupTrackingRouter, setupTrackingClick } from './utils/track
   app.config.globalProperties.$tracking = tracking
 
   app.mount('#app')
+  
+  // 应用初始化完成后隐藏加载动画
+  setTimeout(() => {
+    const loadingOverlay = document.getElementById('loading-overlay')
+    if (loadingOverlay) {
+      loadingOverlay.classList.add('fade-out')
+      // 动画完成后移除元素
+      setTimeout(() => {
+        loadingOverlay.remove()
+      }, 500)
+    }
+  }, 100)
 })()
