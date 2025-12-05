@@ -8,17 +8,23 @@ import Layout from '@/layout/index.vue'
  * 不需要权限验证的路由
  */
 export const staticRoutes = [
-  {
-    path: '/',
-    name: 'Product',
-    component: () => import('@/views/product/index.vue'),
-    meta: { title: '产品介绍', requiresAuth: false }
-  },
+  // {
+  //   path: '/',
+  //   name: 'Product',
+  //   component: () => import('@/views/product/index.vue'),
+  //   meta: { title: '产品介绍', requiresAuth: false }
+  // },
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
     meta: { title: '登录', requiresAuth: false }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/auth/Register.vue'),
+    meta: { title: '注册', requiresAuth: false }
   },
   {
     path: '/404',
@@ -186,7 +192,7 @@ export function resetRouter() {
 }
 
 // 白名单：不需要登录就能访问的路由
-const whiteList = ['/', '/login', '/404']
+const whiteList = ['/', '/login', '/register', '/404']
 
 /**
  * 全局前置守卫

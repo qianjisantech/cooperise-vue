@@ -1277,9 +1277,9 @@ const loadMyViews = async () => {
       { id: 'folder-1', name: '项目管理' }
     ]
     myViews.value = [
-      { id: 'view-gantt', name: '项目进度', type: 'gantt', folderId: 'folder-1' },
-      { id: 'view-board', name: '任务分配', type: 'board', folderId: 'folder-1' },
-      { id: 'view-calendar', name: '项目日历', type: 'calendar', folderId: 'folder-1' }
+      { id: '100001', name: '项目进度', type: 'gantt', folderId: 'folder-1' },
+      { id: '100002', name: '任务分配', type: 'board', folderId: 'folder-1' },
+      { id: '100003', name: '项目日历', type: 'calendar', folderId: 'folder-1' }
     ]
     
     // 默认展开所有文件夹

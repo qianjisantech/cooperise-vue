@@ -568,13 +568,16 @@ const getNoticeTypeClass = (type) => {
   z-index: 100;
   height: 64px;
   min-height: 64px;
-  background: #fff;
-  border-bottom: 1px solid #e3e6eb;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   .header-left {
     display: flex;
@@ -583,7 +586,7 @@ const getNoticeTypeClass = (type) => {
 
     :deep(.app-logo) {
       padding-right: 24px;
-      border-right: 1px solid #e7e7e7;
+      border-right: 1px solid rgba(0, 0, 0, 0.06);
       .space-switch-select {
         min-width: 200px;
       }
@@ -592,8 +595,9 @@ const getNoticeTypeClass = (type) => {
     .page-title {
       font-size: 18px;
       font-weight: 600;
-      color: #000;
+      color: var(--color-text-primary);
       margin: 0;
+      letter-spacing: -0.01em;
     }
   }
 
@@ -745,10 +749,12 @@ const getNoticeTypeClass = (type) => {
         top: 44px;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1px solid #dcdcdc;
-        border-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
         max-height: 400px;
         overflow-y: auto;
         z-index: 1000;
@@ -760,14 +766,14 @@ const getNoticeTypeClass = (type) => {
           padding: 12px 16px;
           cursor: pointer;
           transition: background 0.2s;
-          border-bottom: 1px solid #f0f0f0;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 
           &:last-child {
             border-bottom: none;
           }
 
           &:hover {
-            background: #f5f7fa;
+            background: var(--color-bg-secondary);
           }
 
           .issue-info {
@@ -799,10 +805,12 @@ const getNoticeTypeClass = (type) => {
         top: 44px;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1px solid #dcdcdc;
-        border-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 24px;
         display: flex;
         flex-direction: column;
@@ -827,20 +835,21 @@ const getNoticeTypeClass = (type) => {
       gap: 8px;
       padding: 6px 12px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.3s;
+      border-radius: 12px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
       &:hover {
-        background: #f5f7fa;
+        background: var(--color-bg-secondary);
       }
 
       .username {
         font-size: 14px;
-        color: #000;
+        color: var(--color-text-primary);
+        font-weight: 500;
       }
 
       .t-icon {
-        color: #646a73;
+        color: var(--color-text-secondary);
       }
     }
   }
@@ -853,14 +862,17 @@ const getNoticeTypeClass = (type) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 16px;
+    padding: 10px 16px;
     font-size: 14px;
-    color: #646a73;
+    color: var(--color-text-primary);
     text-align: center;
+    border-radius: 8px;
+    margin: 2px 4px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      background: #f5f7fa;
-      color: #0052d9;
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
     }
   }
 }

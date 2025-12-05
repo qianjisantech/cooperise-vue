@@ -112,15 +112,89 @@ body {
   will-change: scroll-position;
 }
 
-/* 全局设置弹窗蒙层样式 - 统一设置为浅灰色半透明 */
+/* 苹果风格弹窗蒙层 - 毛玻璃效果 */
 .t-drawer__mask,
 .t-dialog__mask,
 .t-popup__mask,
 .t-modal__mask {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  /* 浏览器兼容性 */
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  /* 苹果风格毛玻璃效果 */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 苹果风格弹窗内容 */
+.t-dialog,
+.t-drawer,
+.t-popup {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--color-shadow-xl) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* 苹果风格卡片组件 */
+.t-card {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--color-shadow-sm) !important;
+  border: 1px solid var(--color-border) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.t-card:hover {
+  box-shadow: var(--color-shadow-md) !important;
+}
+
+/* 苹果风格按钮组件 */
+.t-button {
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.t-button--variant-outline {
+  border-color: var(--color-border) !important;
+}
+
+.t-button--variant-outline:hover {
+  border-color: var(--color-border-hover) !important;
+  background: var(--color-bg-secondary) !important;
+}
+
+/* 苹果风格输入框组件 */
+.t-input {
+  border-radius: var(--radius-md) !important;
+  border-color: var(--color-border) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.t-input:hover {
+  border-color: var(--color-border-hover) !important;
+}
+
+.t-input--focused {
+  border-color: var(--color-text-secondary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 苹果风格表格 */
+.t-table {
+  border-radius: var(--radius-md) !important;
+}
+
+.t-table__header {
+  background: var(--color-bg-tertiary) !important;
+}
+
+.t-table__row:hover {
+  background: var(--color-bg-secondary) !important;
+}
+
+/* 苹果风格标签 */
+.t-tag {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 500 !important;
+  border: none !important;
 }
 
 /* 响应式工具类 */

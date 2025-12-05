@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="register-container">
     <!-- 左上角Logo -->
     <div class="top-logo">
       <div class="logo-icon-wrapper">
@@ -98,34 +98,27 @@
     </div>
 
     <!-- 主体内容 - 居中卡片 -->
-    <div class="login-main">
-      <div class="login-card">
-        <!-- 登录表单 -->
-        <div class="card-body">
-          <!-- 标题文字 -->
-          <div class="login-title">
-            <h2 class="title-text">欢迎回来</h2>
+    <div class="register-main">
+      <div class="register-card">
+        <!-- 标题文字 -->
+        <div class="card-header">
+          <div class="register-title">
+            <h2 class="title-text">创建账号</h2>
           </div>
+        </div>
 
-          <!-- 登录方式 Tab -->
-          <t-tabs
-            v-model="loginType"
-            theme="normal"
-            class="login-tabs"
-          >
-            <t-tab-panel value="email" label="邮箱登录" />
-          </t-tabs>
-
+        <!-- 注册表单 -->
+        <div class="card-body">
           <t-form
-            ref="loginFormRef"
-            :data="loginForm"
-            :rules="loginRules"
-            class="login-form"
+            ref="registerFormRef"
+            :data="registerForm"
+            :rules="registerRules"
+            class="register-form"
             label-width="0"
           >
-            <t-form-item name="username">
+            <t-form-item name="email">
               <t-input
-                v-model="loginForm.username"
+                v-model="registerForm.email"
                 placeholder="邮箱"
                 size="large"
                 clearable
@@ -136,11 +129,37 @@
               </t-input>
             </t-form-item>
 
+            <t-form-item name="code" class="code-form-item">
+              <div class="code-input-wrapper">
+                <t-input
+                  v-model="registerForm.code"
+                  placeholder="验证码"
+                  size="large"
+                  clearable
+                  class="code-input"
+                >
+                  <template #prefix-icon>
+                    <t-icon name="lock-on" />
+                  </template>
+                </t-input>
+                <t-button
+                  theme="primary"
+                  variant="outline"
+                  :disabled="codeCountdown > 0 || codeLoading"
+                  @click="handleSendCode"
+                  :loading="codeLoading"
+                  class="code-button"
+                >
+                  {{ codeCountdown > 0 ? `${codeCountdown}秒` : '获取验证码' }}
+                </t-button>
+              </div>
+            </t-form-item>
+
             <t-form-item name="password">
               <t-input
-                v-model="loginForm.password"
+                v-model="registerForm.password"
                 :type="passwordVisible ? 'text' : 'password'"
-                placeholder="密码"
+                placeholder="密码（至少6位）"
                 size="large"
                 clearable
               >
@@ -153,28 +172,40 @@
               </t-input>
             </t-form-item>
 
-            <div class="form-options">
-              <t-checkbox v-model="loginForm.remember">记住我</t-checkbox>
-              <t-link theme="primary" hover="color">忘记密码?</t-link>
-            </div>
+            <t-form-item name="confirmPassword">
+              <t-input
+                v-model="registerForm.confirmPassword"
+                :type="confirmPasswordVisible ? 'text' : 'password'"
+                placeholder="确认密码"
+                size="large"
+                clearable
+              >
+                <template #prefix-icon>
+                  <t-icon name="lock-on" />
+                </template>
+                <template #suffix-icon>
+                  <t-icon :name="confirmPasswordVisible ? 'browse' : 'browse-off'" @click="toggleConfirmPasswordVisibility" style="cursor: pointer;" />
+                </template>
+              </t-input>
+            </t-form-item>
 
             <t-button
               theme="primary"
               size="large"
               :loading="loading"
               block
-              @click="handleLogin"
+              @click="handleRegister"
               class="submit-btn"
             >
-              登录
+              注册
             </t-button>
           </t-form>
         </div>
 
-        <!-- 底部注册链接 -->
+        <!-- 底部登录链接 -->
         <div class="card-footer">
-          <span class="footer-text">还没有账号?</span>
-          <t-link theme="primary" hover="color" @click="goToRegister">立即注册</t-link>
+          <span class="footer-text">已有账号?</span>
+          <t-link theme="primary" hover="color" @click="goToLogin">立即登录</t-link>
         </div>
       </div>
     </div>
@@ -183,74 +214,195 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { useUserStore } from '@/store/user.js'
-import tracking from '@/utils/tracking'
+import { register, sendVerificationCode } from '@/api/auth.js'
 
 const router = useRouter()
-const route = useRoute()
-const authStore = useUserStore()
 
-// 登录方式
-const loginType = ref('email')
-
-// 表单引用和状态
-const loginFormRef = ref(null)
+const registerFormRef = ref(null)
 const loading = ref(false)
+const codeLoading = ref(false)
 const passwordVisible = ref(false)
+const confirmPasswordVisible = ref(false)
+const codeCountdown = ref(0)
 
-const loginForm = reactive({
-  username: '',
+const registerForm = reactive({
+  email: '',
+  code: '',
   password: '',
-  remember: false
+  confirmPassword: ''
 })
 
-const loginRules = {
-  username: [
+const validateConfirmPassword = (val) => {
+  if (!val) {
+    return { result: false, message: '请再次输入密码' }
+  }
+  if (val !== registerForm.password) {
+    return { result: false, message: '两次输入的密码不一致' }
+  }
+  return { result: true }
+}
+
+const validateCode = (val) => {
+  if (!val || !val.trim()) {
+    return { result: false, message: '请输入验证码' }
+  }
+  if (!/^\d{6}$/.test(val.trim())) {
+    return { result: false, message: '验证码为6位数字' }
+  }
+  return { result: true }
+}
+
+const registerRules = {
+  email: [
     { required: true, message: '请输入邮箱' },
     { type: 'email', message: '请输入正确的邮箱格式' }
   ],
-  password: [{ required: true, message: '请输入密码' }]
+  code: [
+    { required: true, message: '请输入验证码' },
+    { validator: validateCode }
+  ],
+  password: [
+    { required: true, message: '请输入密码' },
+    { min: 6, message: '密码长度至少6位' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码' },
+    { validator: validateConfirmPassword }
+  ]
 }
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
 }
 
-const handleLogin = async () => {
-  const valid = await loginFormRef.value.validate()
-  if (!valid) return
+const toggleConfirmPasswordVisibility = () => {
+  confirmPasswordVisible.value = !confirmPasswordVisible.value
+}
 
+const handleSendCode = async () => {
+  console.log('🔵 点击获取验证码按钮')
+  
+  // 检查邮箱是否为空
+  const email = registerForm.email?.trim()
+  console.log('🔵 邮箱值:', email)
+  
+  if (!email) {
+    MessagePlugin.warning('请输入邮箱')
+    // 手动触发表单验证，显示错误提示
+    try {
+      await registerFormRef.value?.validate()
+    } catch (e) {
+      // 忽略验证错误，只是为了让错误提示显示出来
+    }
+    return
+  }
+
+  // 手动验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    MessagePlugin.warning('请输入正确的邮箱格式')
+    // 触发表单验证，显示错误提示
+    try {
+      await registerFormRef.value?.validate()
+    } catch (e) {
+      // 忽略验证错误
+    }
+    return
+  }
+
+  // 开始发送验证码
+  console.log('🔵 开始发送验证码，邮箱:', email)
+  codeLoading.value = true
+  try {
+    const response = await sendVerificationCode(email)
+    console.log('✅ 验证码发送响应:', response)
+    
+    // 检查后端响应
+    if (response && response.success === false) {
+      // 后端返回失败，拦截器已经显示了错误消息
+      console.log('❌ 后端返回失败')
+      return
+    }
+    
+    // 发送成功
+    console.log('✅ 验证码发送成功')
+    await MessagePlugin.success(response?.message || '验证码已发送，请查收邮箱')
+    
+    // 开始倒计时
+    codeCountdown.value = 60
+    const timer = setInterval(() => {
+      codeCountdown.value--
+      if (codeCountdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    console.error('❌ 发送验证码异常:', error)
+    // 网络错误或其他异常
+    if (!error.response) {
+      await MessagePlugin.error(error.message || '网络错误，请稍后重试')
+    }
+  } finally {
+    codeLoading.value = false
+  }
+}
+
+const handleRegister = async () => {
+  // 先手动检查必填字段是否为空（双重保险）
+  if (!registerForm.email || !registerForm.email.trim()) {
+    await MessagePlugin.warning('请输入邮箱')
+    return
+  }
+  if (!registerForm.code || !registerForm.code.trim()) {
+    await MessagePlugin.warning('请输入验证码')
+    return
+  }
+  if (!registerForm.password || !registerForm.password.trim()) {
+    await MessagePlugin.warning('请输入密码')
+    return
+  }
+  if (!registerForm.confirmPassword || !registerForm.confirmPassword.trim()) {
+    await MessagePlugin.warning('请再次输入密码')
+    return
+  }
+
+  // 表单验证
+  try {
+    const valid = await registerFormRef.value.validate()
+    if (!valid) {
+      return
+    }
+  } catch (error) {
+    // 验证失败，不发送请求
+    return
+  }
+
+  // 验证通过后才发送请求
   loading.value = true
   try {
-    await authStore.login({
-      username: loginForm.username,
-      password: loginForm.password,
-      remember: loginForm.remember
+    await register({
+      email: registerForm.email.trim(),
+      code: registerForm.code.trim(),
+      password: registerForm.password
     })
-
-    // 登录成功埋点
-    tracking.trackLogin(loginForm.username)
-
-    MessagePlugin.success('登录成功')
-
-    const redirect = route.query.redirect || '/home'
-    router.push(redirect)
+    // 跳转到登录页
+    router.push('/login')
   } catch (error) {
-    MessagePlugin.error(error.message || '登录失败')
+    MessagePlugin.error(error.message || '注册失败')
   } finally {
     loading.value = false
   }
 }
 
-const goToRegister = () => {
-  router.push('/register')
+const goToLogin = () => {
+  router.push('/login')
 }
 </script>
 
 <style scoped lang="scss">
-.login-container {
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -392,41 +544,26 @@ const goToRegister = () => {
   }
 
   // 主体内容 - 居中卡片
-  .login-main {
+  .register-main {
     position: relative;
     z-index: 1;
     width: 100%;
     max-width: 420px;
     animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
-    .login-card {
+    .register-card {
       background: #ffffff;
       border-radius: 24px;
       box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
       padding: 48px 40px;
       border: 1px solid rgba(0, 0, 0, 0.06);
 
+      // 标题区域
+      .card-header {
+        margin-bottom: 24px;
+        text-align: center;
 
-      .hero-illustration {
-        width: 100%;
-        margin: 0 auto 24px;
-        display: flex;
-        justify-content: center;
-
-        svg {
-          width: 100%;
-          max-width: 320px;
-          height: auto;
-          display: block;
-        }
-      }
-
-      // 表单区域
-      .card-body {
-        .login-title {
-          margin-bottom: 24px;
-          text-align: center;
-
+        .register-title {
           .title-text {
             font-size: 24px;
             font-weight: 600;
@@ -435,89 +572,57 @@ const goToRegister = () => {
             letter-spacing: -0.01em;
           }
         }
+      }
 
-        .login-tabs {
-          margin-bottom: 24px;
-          
-          :deep(.t-tabs__nav) {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            padding: 0;
-          }
-          
-          :deep(.t-tabs__tab) {
-            font-size: 15px;
-            font-weight: 500;
-            color: #86868b;
-            padding: 12px 20px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            &:hover {
-              color: #0052d9;
-            }
-          }
-          
-          :deep(.t-tabs__tab--active) {
-            color: #0052d9;
-            font-weight: 600;
-          }
-          
-          :deep(.t-tabs__bar) {
-            background: #0052d9;
-            height: 2px;
-            border-radius: 1px;
-          }
-          
-          :deep(.t-tabs__content) {
-            display: none;
-          }
-        }
-
-        .login-form {
+      // 表单区域
+      .card-body {
+        .register-form {
           :deep(.t-form-item) {
             margin-bottom: 20px;
+
+            &:last-of-type {
+              margin-bottom: 0;
+            }
           }
 
           :deep(.t-input) {
-              height: 48px;
+            height: 48px;
+            border-radius: 12px !important;
+            border-color: rgba(0, 0, 0, 0.1);
+            background: #f5f5f7;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+            &:hover {
+              border-color: rgba(0, 0, 0, 0.15);
+              background: #ffffff;
+            }
+
+            &:focus-within {
+              border-color: #0052d9;
+              background: #ffffff;
+              box-shadow: 0 0 0 3px rgba(0, 82, 217, 0.1);
+            }
+            
+            .t-input__inner {
               border-radius: 12px !important;
-              border-color: rgba(0, 0, 0, 0.1);
-              background: #f5f5f7;
-              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .t-input__wrap {
+              border-radius: 12px !important;
+            }
 
-              &:hover {
-                border-color: rgba(0, 0, 0, 0.15);
-                background: #ffffff;
-              }
+            input {
+              font-size: 15px;
+              color: #1d1d1f;
+            }
 
-              &:focus-within {
-                border-color: #0052d9;
-                background: #ffffff;
-                box-shadow: 0 0 0 3px rgba(0, 82, 217, 0.1);
-              }
-              
-              .t-input__inner {
-                border-radius: 12px !important;
-              }
-              
-              .t-input__wrap {
-                border-radius: 12px !important;
-              }
+            input::placeholder {
+              color: #86868b;
+            }
 
-              input {
-                font-size: 15px;
-                color: #1d1d1f;
-              }
-
-              input::placeholder {
-                color: #86868b;
-              }
-
-              .t-input__prefix {
-                color: #86868b;
-              }
+            .t-input__prefix {
+              color: #86868b;
+            }
 
             .t-input__suffix {
               color: #86868b;
@@ -525,25 +630,78 @@ const goToRegister = () => {
             }
           }
 
-          .form-options {
+          // 验证码输入框特殊样式
+          .code-form-item {
+            :deep(.t-form-item__content) {
+              margin: 0;
+            }
+          }
+
+          .code-input-wrapper {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+            gap: 12px;
+            align-items: flex-start;
 
-            :deep(.t-checkbox) {
-              font-size: 14px;
-              color: #1d1d1f;
-
-              .t-checkbox__label {
-                color: #1d1d1f;
+            .code-input {
+              flex: 1;
+              
+              :deep(.t-input) {
+                margin-bottom: 0;
               }
             }
 
-            :deep(.t-link) {
+            .code-button {
+              flex-shrink: 0;
+              height: 48px;
+              min-width: 120px;
+              border-radius: 12px !important;
               font-size: 14px;
-              color: #0052d9;
               font-weight: 500;
+              border-color: #0052d9 !important;
+              color: #0052d9 !important;
+              background: #ffffff !important;
+              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              white-space: nowrap;
+
+              &:hover:not(:disabled) {
+                background: #0052d9 !important;
+                color: #ffffff !important;
+                border-color: #0052d9 !important;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 82, 217, 0.25);
+              }
+
+              &:active:not(:disabled) {
+                transform: translateY(0);
+                background: #003d9f !important;
+                border-color: #003d9f !important;
+              }
+
+              &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #f5f5f7 !important;
+                border-color: rgba(0, 0, 0, 0.1) !important;
+                color: #86868b !important;
+              }
+
+              :deep(.t-button) {
+                border-radius: 12px !important;
+                background: inherit !important;
+                border-color: inherit !important;
+                color: inherit !important;
+              }
+
+              :deep(.t-button__text) {
+                border-radius: 12px !important;
+                color: inherit !important;
+              }
+
+              :deep(.t-button:hover:not(:disabled)) {
+                background: #0052d9 !important;
+                color: #ffffff !important;
+                border-color: #0052d9 !important;
+              }
             }
           }
 
@@ -554,7 +712,7 @@ const goToRegister = () => {
             border-radius: 12px !important;
             background: #0052d9;
             border: none;
-            margin-bottom: 12px;
+            margin-top: 12px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
             &:hover:not(:disabled) {
@@ -578,7 +736,7 @@ const goToRegister = () => {
         }
       }
 
-      // 底部注册链接
+      // 底部登录链接
       .card-footer {
         margin-top: 32px;
         text-align: center;
@@ -630,7 +788,7 @@ const goToRegister = () => {
     opacity: 0;
   }
   to {
-    opacity: 0.85;
+    opacity: 0.6;
   }
 }
 
@@ -647,7 +805,7 @@ const goToRegister = () => {
 
 // 响应式适配
 @media (max-width: 768px) {
-  .login-container {
+  .register-container {
     padding: 16px;
 
     .top-logo {
@@ -673,16 +831,34 @@ const goToRegister = () => {
       }
     }
 
-    .login-main {
-      .login-card {
+    .register-main {
+      .register-card {
         padding: 40px 32px;
+
+        .card-header {
+          margin-bottom: 24px;
+        }
+
+        .card-body {
+          .register-form {
+            .code-input-wrapper {
+              flex-direction: column;
+              gap: 12px;
+
+              .code-button {
+                width: 100%;
+                min-width: auto;
+              }
+            }
+          }
+        }
       }
     }
   }
 }
 
 @media (max-width: 480px) {
-  .login-container {
+  .register-container {
     padding: 12px;
 
     .top-logo {
@@ -708,8 +884,8 @@ const goToRegister = () => {
       }
     }
 
-    .login-main {
-      .login-card {
+    .register-main {
+      .register-card {
         padding: 32px 24px;
         border-radius: 12px;
       }
@@ -717,3 +893,4 @@ const goToRegister = () => {
   }
 }
 </style>
+

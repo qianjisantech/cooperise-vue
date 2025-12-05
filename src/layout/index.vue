@@ -147,7 +147,7 @@ onMounted(async () => {
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--color-bg-secondary);
   position: relative;
 
   // 权限加载中
@@ -182,21 +182,22 @@ onMounted(async () => {
       flex: 1;
       padding: 0;
       overflow-y: auto;
-      background: #f5f7fa;
+      background: var(--color-bg-secondary);
       height: 100%;
 
-      // 优化滚动条样式
+      // 苹果风格滚动条
       &::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
       }
 
       &::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.12);
-        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
 
         &:hover {
-          background-color: rgba(0, 0, 0, 0.18);
+          background-color: rgba(0, 0, 0, 0.15);
         }
       }
 

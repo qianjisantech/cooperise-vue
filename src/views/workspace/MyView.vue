@@ -133,8 +133,9 @@ const parseViewConfigToQuery = (config) => {
 /**
  * 加载事项数据
  * @param {object} viewConfig - 视图配置
+ * @param {string} viewType - 视图类型
  */
-const loadIssueData = async (viewConfig) => {
+const loadIssueData = async (viewConfig, viewType) => {
   try {
     // 解析视图配置为查询参数
     const queryParams = parseViewConfigToQuery(viewConfig)
@@ -144,7 +145,10 @@ const loadIssueData = async (viewConfig) => {
     // 根据视图类型生成不同的事项数据
     let mockIssueData;
     
-    if (viewId.value === 'view-gantt') {
+    // 使用传入的视图类型
+    const currentViewType = viewType || 'table'
+    
+    if (currentViewType === 'gantt') {
       // 甘特图视图数据（项目进度）
       const now = new Date()
       const year = now.getFullYear()
@@ -792,7 +796,7 @@ const loadIssueData = async (viewConfig) => {
           }
         ]
       };
-    } else if (viewId.value === 'view-board') {
+    } else if (currentViewType === 'board') {
       // 看板视图数据（任务分配）
       const now = new Date()
       const year = now.getFullYear()
@@ -1478,7 +1482,7 @@ const loadIssueData = async (viewConfig) => {
           }
         ]
       };
-    } else if (viewId.value === 'view-calendar') {
+    } else if (currentViewType === 'calendar') {
       // 日历视图数据（项目日历）- 生成最近日期的数据
       const now = new Date()
       const year = now.getFullYear()
@@ -2095,7 +2099,7 @@ const loadIssueData = async (viewConfig) => {
     }
     
     // 为日历视图生成额外的事件数据
-    if (viewId.value === 'view-calendar' && viewData.value?.type === 'calendar') {
+    if (currentViewType === 'calendar') {
       viewData.value.data = {
         events: [
           {
@@ -2177,10 +2181,24 @@ const loadViewData = async () => {
   issueData.value = null
 
   try {
-    // 根据视图类型生成不同的假数据
-    let viewName, viewType, viewConfig, viewData;
+    // 根据视图ID获取视图类型（mock数据映射）
+    const viewTypeMap = {
+      '100001': 'gantt',
+      '100002': 'board',
+      '100003': 'calendar',
+      'view-list': 'table',
+      'view-gantt': 'gantt',
+      'view-board': 'board',
+      'view-calendar': 'calendar'
+    }
     
-    if (viewId.value === 'view-list') {
+    // 先获取视图类型
+    let viewType = viewTypeMap[viewId.value] || 'table'
+    
+    // 根据视图类型生成不同的假数据
+    let viewName, viewConfig, viewData;
+    
+    if (viewType === 'table') {
       // 列表视图
       viewName = '所有项目';
       viewType = 'table';
@@ -2211,10 +2229,9 @@ const loadViewData = async () => {
           { id: 'project-3', name: '数据分析系统', status: '已完成', priority: '高', startDate: '2023-10-01', endDate: '2024-01-15' }
         ]
       };
-    } else if (viewId.value === 'view-gantt') {
+    } else if (viewType === 'gantt') {
       // 甘特图视图
       viewName = '项目进度';
-      viewType = 'gantt';
       viewConfig = {
         filters: {
           projectId: ['project-1']
@@ -2281,10 +2298,9 @@ const loadViewData = async () => {
           { predecessor: 'task-4', successor: 'task-5' }
         ]
       };
-    } else if (viewId.value === 'view-board' || viewId.value.includes('kanban')) {
+    } else if (viewType === 'board') {
       // 看板视图
       viewName = '任务分配';
-      viewType = 'board';
       viewConfig = {
         columns: [
           { id: 'todo', title: '待办', color: '#909399' },
@@ -2329,10 +2345,9 @@ const loadViewData = async () => {
           }
         ]
       };
-    } else if (viewId.value === 'view-calendar' || viewId.value.includes('calendar')) {
+    } else if (viewType === 'calendar') {
       // 日历视图
       viewName = '项目日历';
-      viewType = 'calendar';
       viewConfig = {
         filters: {
           projectId: ['project-1']
@@ -2386,7 +2401,6 @@ const loadViewData = async () => {
     } else {
       // 默认视图
       viewName = `测试视图 ${viewId.value}`;
-      viewType = 'table';
       viewConfig = {
         filters: {
           status: ['todo', 'doing', 'done'],
@@ -2424,8 +2438,8 @@ const loadViewData = async () => {
       error.value = `不支持的视图类型: ${mockViewDetail.type}`
     }
 
-    // 加载事项数据
-    await loadIssueData(mockViewDetail.config)
+    // 加载事项数据（传入视图类型）
+    await loadIssueData(mockViewDetail.config, viewType)
     
     loading.value = false
   } catch (err) {
