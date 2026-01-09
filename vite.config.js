@@ -190,18 +190,39 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        // target: 'http://localhost:443',
-        target: 'http://139.196.208.166:443',
+        // 支持环境变量配置API服务器地址，默认为生产环境地址
+        target: process.env.VITE_API_TARGET_URL || 'http://47.100.0.96:80',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        // 添加CORS头以解决跨域问题
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // 在开发环境中添加CORS头
+            if (process.env.NODE_ENV === 'development') {
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+              res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            }
+          });
+        }
       },
-
+      '/ws': {
+        target: process.env.VITE_API_TARGET_URL || 'http://47.100.0.96:80',
+        changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/ws/, '/ws')
+      }
     }
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
     global: 'globalThis',
-    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || '/api')
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || '/api'),
+    'import.meta.env.VITE_API_TARGET_URL': JSON.stringify(process.env.VITE_API_TARGET_URL || 'http://47.100.0.96:80'),
+    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'ws://47.100.0.96:80/ws')
   },
   optimizeDeps: {
     include: ['tdesign-vue-next', 'tdesign-icons-vue-next'],
