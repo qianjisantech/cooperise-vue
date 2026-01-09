@@ -190,17 +190,12 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:80',
-        // target: 'http://47.100.0.96:80',
+        // target: 'http://localhost:443',
+        target: 'http://139.196.208.166:443',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
-      '/ws': {
-        target: 'ws://47.100.0.96:8080',
-        ws: true,
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ws/, '')
-      }
+
     }
   },
   define: {

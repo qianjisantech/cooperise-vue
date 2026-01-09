@@ -16,13 +16,14 @@ export function pageTrackingLogs(query) {
  * 保存埋点日志
  * @param {Object} data 埋点数据
  */
+/*
+// 邮件相关功能已注释 - 提供空实现以避免导入错误
 export function saveTrackingLog(data) {
-  return request({
-    url: '/tracking/save',
-    method: 'post',
-    data
-  })
+  // 邮件相关埋点功能已禁用
+  console.log('[Tracking] 邮件相关埋点功能已禁用，跳过保存:', data)
+  return Promise.resolve() // 返回空的Promise
 }
+*/
 
 /**
  * 查询埋点日志详情
@@ -65,11 +66,11 @@ export function getTrackingUserStats(query) {
  * 上报埋点数据（使用 /api/tracking/report 接口）
  * @param {Object} data 埋点数据
  */
+/*
+// 邮件相关功能已注释 - 提供空实现以避免导入错误
 export function reportTracking(data) {
-  return request({
-    url: '/tracking/report',
-    method: 'post',
-    data,
-    showLoading: false // 埋点请求不显示loading
-  })
+  // 邮件相关埋点功能已禁用
+  console.log('[Tracking] 邮件相关埋点功能已禁用，跳过上报:', data)
+  return Promise.resolve() // 返回空的Promise
 }
+*/

@@ -1,4 +1,5 @@
-import { saveTrackingLog, reportTracking } from '@/api/tracking'
+// 邮件相关埋点功能已禁用 - API导入已注释
+// import { saveTrackingLog, reportTracking } from '@/api/tracking'
 import { v4 as uuidv4 } from 'uuid'
 
 /**
@@ -128,26 +129,15 @@ class TrackingSDK {
       }
     }
     try {
-      // 如果是页面卸载，使用 sendBeacon
+      // 邮件相关埋点功能已禁用
+      console.log('[Tracking] 邮件相关埋点功能已禁用，跳过数据上报:', trackingData.eventName || trackingData.eventType)
+      // 如果是页面卸载，使用 sendBeacon (保留页面卸载的基本功能)
       if (data.isUnload) {
         const blob = new Blob([JSON.stringify(trackingData)], { type: 'application/json' })
         navigator.sendBeacon('/api/tracking/report', blob)
-      } else {
-        await reportTracking(trackingData)
       }
     } catch (error) {
       console.error('❌ [Tracking] 埋点发送失败:', error)
-      console.error('❌ [Tracking] 错误详情:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      })
-      // 如果 report 接口失败，尝试使用 save 接口作为降级方案
-      try {
-        await saveTrackingLog(trackingData)
-      } catch (fallbackError) {
-        console.error('❌ [Tracking] 降级埋点发送也失败:', fallbackError)
-      }
     }
   }
 

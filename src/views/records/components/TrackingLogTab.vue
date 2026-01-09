@@ -139,7 +139,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { pageTrackingLogs, getTrackingLogById } from '@/api/tracking'
+// import { pageTrackingLogs, getTrackingLogById } from '@/api/tracking'
 
 // 搜索表单
 const searchForm = reactive({
@@ -229,16 +229,10 @@ const columns = [
 const loadData = async () => {
   loading.value = true
   try {
-    const params = {
-      current: pagination.current,
-      size: pagination.pageSize,
-      ...searchForm
-    }
-    const res = await pageTrackingLogs(params)
-    if (res.success || res.code === 200) {
-      logList.value = res.data.records || []
-      pagination.total = res.data.total || 0
-    }
+    // 埋点日志功能已禁用
+    console.log('[Tracking] 埋点日志查看功能已禁用')
+    logList.value = []
+    pagination.total = 0
   } catch (error) {
     console.error('加载埋点日志失败:', error)
     MessagePlugin.error('加载数据失败')
@@ -277,16 +271,9 @@ const handlePageSizeChange = (size) => {
 
 // 查看详情
 const handleViewDetail = async (row) => {
-  try {
-    const res = await getTrackingLogById(row.id)
-    if (res.success || res.code === 200) {
-      currentLog.value = res.data
-      showDetailDialog.value = true
-    }
-  } catch (error) {
-    console.error('获取详情失败:', error)
-    MessagePlugin.error('获取详情失败')
-  }
+  // 埋点详情查看功能已禁用
+  console.log('[Tracking] 埋点详情查看功能已禁用')
+  MessagePlugin.warning('埋点详情查看功能已禁用')
 }
 
 // 获取事件类型标签
