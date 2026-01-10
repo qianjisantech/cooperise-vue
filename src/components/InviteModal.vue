@@ -154,18 +154,18 @@ const setTab = (tab) => {
 
 const sendInviteByEmail = async () => {
   if (!emailValue.value || emailValue.value.trim().length === 0) {
-    MessagePlugin.warning('请输入邮箱地址')
+    await MessagePlugin.warning('请输入邮箱地址')
     return
   }
   const emails = emailValue.value.split(',').map(s => s.trim()).filter(Boolean)
   const invalid = emails.find(e => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
   if (invalid) {
-    MessagePlugin.warning(`无效的邮箱：${invalid}`)
+    await MessagePlugin.warning(`无效的邮箱：${invalid}`)
     return
   }
   // 模拟发送邀请（可替换为真实接口）
   console.log('[InviteModal] sendInviteByEmail to:', emails)
-  MessagePlugin.success('邀请邮件已发送（模拟）')
+  await MessagePlugin.success('邀请邮件已发送（模拟）')
   emailValue.value = ''
 }
 

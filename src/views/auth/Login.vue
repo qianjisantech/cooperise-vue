@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useUserStore } from '@/store/user.js'
@@ -194,10 +194,12 @@ const loginForm = reactive({
 
 const loginRules = {
   email: [
-    { required: true, message: '请输入邮箱' },
-    { type: 'email', message: '请输入正确的邮箱格式' }
+    { required: true, message: '请输入邮箱',trigger: 'blur' },
+    { email: { ignore_max_length: true }, message: '请输入正确的邮箱地址' },
   ],
-  password: [{ required: true, message: '请输入密码' }]
+  password: [{ required: true, message: '密码必填', type: 'error' },
+  ]
+
 }
 
 const togglePasswordVisibility = () => {
@@ -205,23 +207,20 @@ const togglePasswordVisibility = () => {
 }
 
 const handleLogin = async () => {
+
   const valid = await loginFormRef.value.validate()
-  if (!valid) {
-    // 表单验证失败埋点
-    tracking.trackLoginAttempt(loginForm.email, false, '表单验证失败')
+  if (valid) {
     return
   }
-
-  loading.value = true
-  const startTime = Date.now()
   try {
+  loading.value = true
     await authStore.login({
       email: loginForm.email,
       password: loginForm.password,
       remember: loginForm.remember
     })
 
-    const duration = Date.now() - startTime
+
     // 登录成功埋点
     tracking.trackLogin(loginForm.email)
     // 登录尝试成功埋点
@@ -230,7 +229,6 @@ const handleLogin = async () => {
     const redirect = route.query.redirect || '/workspace'
     await router.push(redirect)
   } catch (error) {
-    const duration = Date.now() - startTime
     const errorMessage = error.message || '登录失败'
     // 登录失败埋点
     tracking.trackLoginAttempt(loginForm.email, false, errorMessage)
@@ -258,6 +256,10 @@ const acceptExisting = async () => {
   }
   await router.push(redirectAfter)
 }
+
+onMounted(() => {
+  console.log(loginFormRef.value); // 在浏览器控制台中查看所有可用的属性和方法
+});
 </script>
 
 <style scoped lang="scss">

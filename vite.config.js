@@ -191,7 +191,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         // 支持环境变量配置API服务器地址，默认为生产环境地址
-        target: process.env.VITE_API_TARGET_URL || 'http://47.100.0.96:80',
+        target: process.env.VITE_API_BASE_URL || 'http://139.196.208.166:443',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         // 添加CORS头以解决跨域问题
