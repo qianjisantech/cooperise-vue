@@ -304,14 +304,8 @@ const submitCreate = async () => {
     const res = await apiCreateCompany(payload)
     if (res && (res.success || res.code === 200)) {
       await MessagePlugin.success('创建成功')
-      const newId = res.data?.id || res.data?.company?.id
-      if (newId) {
-        await router.push(`/enterprise-admin/${newId}`)
-        return
-      }
-      // reload list and return
-      await loadCompaniesSimple()
-      showCreateForm.value = false
+      // 创建成功后自动跳转到工作台
+      await router.push('/workspace')
     } else {
       await MessagePlugin.error(res?.message || '创建失败')
     }
