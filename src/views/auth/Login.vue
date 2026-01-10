@@ -181,8 +181,7 @@ const authStore = useUserStore()
 // 登录方式
 const loginType = ref('email')
 
-// 表单引用和状态
-const loginFormRef = ref(null)
+
 const loading = ref(false)
 const passwordVisible = ref(false)
 
@@ -192,24 +191,38 @@ const loginForm = reactive({
   remember: false
 })
 
-const loginRules = {
-  email: [
-    { required: true, message: '请输入邮箱',trigger: 'blur' },
-    { email: { ignore_max_length: true }, message: '请输入正确的邮箱地址' },
-  ],
-  password: [{ required: true, message: '密码必填', type: 'error' },
-  ]
 
-}
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
 }
+const validateLoginForm = () => {
+  const errors = []
 
+  if (!loginForm.email?.trim()) {
+    errors.push('邮箱不能为空')
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginForm.email)) {
+    errors.push('请输入有效的邮箱地址')
+  }
+
+  if (!loginForm.password) {
+    errors.push('密码不能为空')
+  } else if (loginForm.password.length < 6) {
+    errors.push('密码长度不能少于6位')
+  }
+  // else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(loginForm.password)) {
+  //   errors.push('密码需包含大小写字母和数字')
+  // }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
 const handleLogin = async () => {
-
-  const valid = await loginFormRef.value.validate()
-  if (valid) {
+  const { isValid, errors } = validateLoginForm()
+  if (!isValid) {
+    await MessagePlugin.error(errors[0]) // 显示第一个错误
     return
   }
   try {
@@ -219,8 +232,6 @@ const handleLogin = async () => {
       password: loginForm.password,
       remember: loginForm.remember
     })
-
-
     // 登录成功埋点
     tracking.trackLogin(loginForm.email)
     // 登录尝试成功埋点
@@ -257,9 +268,7 @@ const acceptExisting = async () => {
   await router.push(redirectAfter)
 }
 
-onMounted(() => {
-  console.log(loginFormRef.value); // 在浏览器控制台中查看所有可用的属性和方法
-});
+
 </script>
 
 <style scoped lang="scss">
