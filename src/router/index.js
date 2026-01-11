@@ -21,12 +21,7 @@ export const staticRoutes = [
     component: () => import('@/views/auth/Register.vue'),
     meta: { title: '注册', requiresAuth: false }
   },
-  {
-    path: '/enterprise/self',
-    name: 'SelfEnterprises',
-    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
-    meta: { title: '我的企业', requiresAuth: true }
-  },
+
   {
     path: '/self/enterprise',
     name: 'SelfEnterprisesAlt',
@@ -36,7 +31,7 @@ export const staticRoutes = [
   {
     path: '/self/enterprise/create',
     name: 'SelfEnterpriseCreate',
-    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
+    component: () => import('@/views/enterprise/SelfEnterpriseCreate.vue'),
     meta: { title: '新建企业', requiresAuth: true }
   },
   {

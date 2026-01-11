@@ -79,7 +79,6 @@ const handleClick = () => {
 .app-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
 
   &.clickable {
     cursor: pointer;
@@ -109,6 +108,8 @@ const handleClick = () => {
   .logo-text-svg {
     display: inline-block;
     vertical-align: middle;
+    /* 微调：向左微移以减小与图标的视觉距离 */
+    margin-left: -6px;
   }
   /* Styles when displayed on /self/enterprise route */
   &.enterprise-mode {
@@ -127,7 +128,8 @@ const handleClick = () => {
       height: 80px !important;
       display: inline-block;
       vertical-align: middle;
-      margin-left: 8px;
+      /* 企业模式下保持一点间距但比之前小 */
+      margin-left: 4px;
     }
   }
 }
