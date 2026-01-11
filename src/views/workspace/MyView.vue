@@ -2096,6 +2096,7 @@ const loadIssueData = async (viewConfig, viewType) => {
     
     // 为日历视图生成额外的事件数据
     if (currentViewType === 'calendar') {
+      viewData.value = viewData.value || {}
       viewData.value.data = {
         events: [
           {
