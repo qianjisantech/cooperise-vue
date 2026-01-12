@@ -108,15 +108,12 @@ body {
   will-change: scroll-position;
 }
 
-/* 苹果风格弹窗蒙层 - 毛玻璃效果 */
+/* 弹窗蒙层 - 最浅遮罩 */
 .t-drawer__mask,
 .t-dialog__mask,
 .t-popup__mask,
 .t-modal__mask {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-  /* 苹果风格毛玻璃效果 */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  background-color: rgba(0, 0, 0, 0.05) !important;
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -127,6 +124,14 @@ body {
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--color-shadow-xl) !important;
   border: 1px solid var(--color-border) !important;
+}
+
+/* 弹窗左中间定位 */
+.t-dialog {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 /* 苹果风格卡片组件 */

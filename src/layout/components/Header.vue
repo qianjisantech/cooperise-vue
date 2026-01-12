@@ -456,8 +456,8 @@ const getNoticeTypeClass = (type) => {
   left: 0;
   right: 0;
   z-index: 100;
-  height: 64px;
-  min-height: 64px;
+  height: 60px;
+  min-height: 60px;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);

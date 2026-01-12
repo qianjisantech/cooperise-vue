@@ -2,7 +2,8 @@
   <t-dialog
     v-model:visible="dialogVisible"
     :header="isEdit ? '编辑事项' : '新建事项'"
-    width="900px"
+    width="600px"
+    height="400px"
     :close-on-overlay-click="false"
     :confirm-btn="null"
     :cancel-btn="null"
@@ -24,7 +25,7 @@
       @submit="handleSubmit"
     >
       <!-- 组织 - 必填 -->
-      <t-form-item label="组织" name="spaceId">
+      <t-form-item label="组织" name="spaceId" class="compact-field">
         <t-select
           v-model="formData.spaceId"
           placeholder="请选择组织"
@@ -47,7 +48,7 @@
       </t-form-item>
 
       <!-- 事项类型 - 必填 -->
-      <t-form-item label="事项类型" name="issueType">
+      <t-form-item label="事项类型" name="issueType" class="compact-field">
         <t-select v-model="formData.issueType" placeholder="请选择事项类型" :disabled="isEdit">
           <t-option label="任务" :value="1" />
           <t-option label="bug" :value="2" />
@@ -57,12 +58,12 @@
       </t-form-item>
 
       <!-- Tab 页面 -->
-      <t-tabs v-model="activeTab" class="form-tabs">
+      <t-tabs v-model="activeTab" class="compact-field">
         <!-- 必填信息 Tab -->
         <t-tab-panel value="required" label="必填信息">
           <div class="tab-content">
             <!-- 概要 - 必填 -->
-            <t-form-item label="概要" name="summary">
+            <t-form-item class="compact-field" label="概要" name="summary">
               <t-input
                 v-model="formData.summary"
                 placeholder="请输入事项概要"
@@ -72,15 +73,16 @@
             </t-form-item>
 
             <!-- 描述 - 富文本编辑器 -->
-            <t-form-item label="描述" name="description">
+            <t-form-item label="描述" name="description" class="compact-field">
               <RichTextEditor
                 v-model="formData.description"
                 placeholder="请输入事项描述..."
+                :height="20"
               />
             </t-form-item>
 
             <!-- 经办人 - 必填 -->
-            <t-form-item label="经办人" name="assigneeId">
+            <t-form-item class="compact-field" label="经办人" name="assigneeId">
               <t-select
                 v-model="formData.assigneeId"
                 placeholder="请选择经办人"
@@ -103,7 +105,7 @@
             </t-form-item>
 
             <!-- 优先级 - 必填 -->
-            <t-form-item label="优先级" name="priority">
+            <t-form-item label="优先级" name="priority" class="compact-field">
               <t-select v-model="formData.priority" placeholder="请选择优先级" style="width: 200px;">
                 <t-option label="高" :value="1" />
                 <t-option label="中" :value="2" />
@@ -112,7 +114,7 @@
             </t-form-item>
 
             <!-- 开始日期 - 必填 -->
-            <t-form-item label="开始日期" name="startDate">
+            <t-form-item label="开始日期" name="startDate" class="compact-field">
               <t-date-picker
                 v-model="formData.startDate"
                 placeholder="请选择开始日期"
@@ -121,7 +123,7 @@
             </t-form-item>
 
             <!-- 截止日期 - 必填 -->
-            <t-form-item label="截止日期" name="dueDate">
+            <t-form-item label="截止日期" name="dueDate" class="compact-field">
               <t-date-picker
                 v-model="formData.dueDate"
                 placeholder="请选择截止日期"
@@ -130,7 +132,7 @@
             </t-form-item>
 
             <!-- 预估工时 - 必填 -->
-            <t-form-item label="预估工时" name="estimatedHours">
+            <t-form-item label="预估工时" name="estimatedHours" class="compact-field">
               <t-input-number
                 v-model="formData.estimatedHours"
                 placeholder="请输入预估工时（小时）"
@@ -584,10 +586,68 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  padding: 60px 0;
+  min-height: 100px;
+  padding: 20px 0;
+}
+ .compact-field{
+   width: 100%;
+   margin-top: 8px;
+   margin-bottom: 12px;
+ }
+
+/* 苹果风格：输入/选择控件圆角、统一高度（移除自定义边框，避免与组件内部边框叠加） */
+:deep(.t-input),
+:deep(.t-select),
+:deep(.t-date-picker),
+:deep(.t-input-number) {
+  height: 36px !important;
+  min-height: 36px !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  /* 不设置 border/background，以避免与组件内部已有样式产生多层边框 */
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* 提升选择框的边框可见性（使用内联阴影避免与组件内部边框叠加） */
+:deep(.t-select) {
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08) !important;
+  border-radius: 8px !important;
+}
+:deep(.t-select:focus-within),
+:deep(.t-select):focus {
+  box-shadow: inset 0 0 0 1px rgba(0,122,255,0.25) !important;
+}
+/* 使下拉框内的提示文字垂直居中 */
+:deep(.t-select .t-input__wrap),
+:deep(.t-select .t-input__inner),
+:deep(.t-select__inner) {
+  display: flex !important;
+  align-items: center !important;
+  height: 36px !important;
+}
+:deep(.t-select .t-input__placeholder) {
+  margin: 0 !important;
+  line-height: normal !important;
 }
 
+ /* 标签（label）风格更轻柔 */
+ :deep(.t-form-item__label) {
+   color: #6b6b72 !important;
+   font-weight: 600 !important;
+   font-size: 13px !important;
+   padding-right: 8px;
+ }
+
+ /* tabs 调整为更简洁的风格 */
+ .form-tabs :deep(.t-tabs__nav) {
+   background: transparent !important;
+   border-bottom: 1px solid #eef0f2 !important;
+   padding-bottom: 6px;
+ }
+ .form-tabs .tab-content {
+   padding: 12px 0 !important;
+ }
 .user-option {
   display: flex;
   align-items: center;
@@ -765,13 +825,42 @@ onMounted(() => {
     }
   }
 
-  // 富文本编辑器最小高度，避免 modal hoverbar 定位异常
+
   :deep(.w-e-text-container) {
-    min-height: 300px !important;
+    min-height: 100px !important;
   }
 
   :deep(.w-e-scroll) {
-    min-height: 300px !important;
+    min-height: 100px !important;
   }
 }
+
+/* 紧凑样式覆盖：减小表单字段垂直间距，缩小 tab 内容内边距，排期区域间距 */
+:deep(.t-form-item) {
+  margin-bottom: 12px !important;
+}
+.form-tabs :deep(.t-tabs__nav) {
+  margin-bottom: 8px !important;
+}
+.form-tabs .tab-content {
+  padding: 10px 0 !important;
+}
+.schedule-list {
+  gap: 12px !important;
+}
+.schedule-item {
+  padding: 12px !important;
+}
+.schedule-header {
+  margin-bottom: 8px !important;
+  padding-bottom: 8px !important;
+}
+.schedule-form .form-row {
+  gap: 12px !important;
+  margin-bottom: 8px !important;
+}
+:deep(.t-form-item__label) {
+  margin-bottom: 6px !important;
+}
+
 </style>

@@ -11,6 +11,7 @@
       v-model="valueHtml"
       :defaultConfig="editorConfig"
       :mode="mode"
+      :style="{ minHeight: props.height + 'px' }"
       @onCreated="handleCreated"
     />
   </div>
@@ -29,6 +30,11 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: '请输入内容...'
+  },
+  // 编辑器高度（px），父组件可传入以控制描述区域高度
+  height: {
+    type: Number,
+    default: 300
   }
 })
 
@@ -68,7 +74,7 @@ const toolbarConfig = {
 // 编辑器配置
 const editorConfig = {
   placeholder: props.placeholder,
-  height: 300, // 设置编辑器最小高度，避免初始化时的警告
+  height: props.height, // 设置编辑器最小高度，避免初始化时的警告
   MENU_CONF: {
     // 配置插入图片
     insertImage: {

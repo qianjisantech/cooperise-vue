@@ -121,8 +121,8 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 64px; // 为顶部Header预留组织
-    min-height: calc(100vh - 64px);
+    margin-top: 60px; // 为顶部Header预留组织
+    min-height: calc(100vh - 60px);
   }
 
   // 下方内容区域（Sidebar + Main）
@@ -130,7 +130,7 @@ onMounted(async () => {
     flex: 1;
     display: flex;
     overflow: hidden;
-    margin-top: 64px; // 为顶部Header预留组织
+    margin-top: 60px; // 为顶部Header预留组织
   }
 
   .layout-main {
@@ -179,7 +179,7 @@ onMounted(async () => {
 @media (max-width: 1024px) {
   .layout-container {
     .layout-body {
-      margin-top: 64px;
+      margin-top: 60px;
     }
   }
 }

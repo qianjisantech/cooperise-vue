@@ -42,7 +42,7 @@ const goToHome = () => {
 
 <style scoped lang="scss">
 .top-header {
-  height: 64px;
+  height: 60px;
   background: #fff;
   position: relative;
   z-index: 100;
