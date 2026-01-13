@@ -6,6 +6,23 @@
           <div class="user-center-popup">
             <!-- 左侧主菜单 -->
             <div class="popup-main">
+
+              <!-- 个人信息模块（支持像企业一样可勾选） -->
+              <div class="personal-section">
+                <div class="personal-title">个人</div>
+                <div
+                  class="personal-item"
+                  :class="{ 'is-active': isPersonalSelected }"
+                  @click="handlePersonalClick"
+                >
+                  <div class="enterprise-icon personal-icon">
+                    <t-avatar size="26px" :image="userAvatar" :alt="username">{{ userInitial }}</t-avatar>
+                  </div>
+                  <span class="enterprise-name">{{ username || '个人' }}</span>
+                  <t-icon v-if="isPersonalSelected" name="check" size="16px" class="check-icon" />
+                </div>
+              </div>
+
               <!-- 企业部分 -->
               <div class="enterprise-section">
                 <div class="section-title">企业</div>
@@ -24,8 +41,8 @@
                   <t-icon v-if="company.isDefault" name="check" size="16px" class="check-icon" />
                 </div>
                 <div class="enterprise-item add-enterprise" @click="handleAddEnterprise">
-                  <t-icon name="add" size="20px" />
-                  <span>新建企业</span>
+                  <t-icon name="add" size="18px" />
+                  <span style="font-size: 14px;">新建企业</span>
                 </div>
               </div>
 
@@ -120,8 +137,10 @@ const copySelectedCompany = async () => {
 // 邀请弹窗控制
 const showInviteModal = ref(false)
 
-// 用户信息
-const username = computed(() => userStore.userInfo?.username || 'Admin')
+// 用户信息：优先使用 profile 返回的 user_info.name 字段
+const username = computed(() => {
+  return userStore.userInfo?.name || userStore.userInfo?.username || 'Admin'
+})
 const userInitial = computed(() => {
   return username.value.charAt(0).toUpperCase()
 })
@@ -150,6 +169,14 @@ const companyList = computed(() => userStore.userCompanies || [])
 const activeCompanyId = ref('')
 const currentEnterprise = ref(null)
 const showSecondaryMenu = ref(false)
+
+// 个人选中状态（与企业分开）
+const isPersonalSelected = ref(false)
+
+// 点击个人项：与企业选中互不干扰，仅切换个人选中状态
+const handlePersonalClick = () => {
+  isPersonalSelected.value = !isPersonalSelected.value
+}
 
 // 初始化企业选择状态
 const initCompanySelection = () => {
@@ -303,7 +330,15 @@ watch(() => props.visible, (newVal) => {
 // 监听用户企业数据变化
 watch(() => userStore.userCompanies, (newCompanies) => {
   if (newCompanies && newCompanies.length > 0 && userStore) {
+    // 当存在企业时，优先使用企业上下文，取消个人选中
+    isPersonalSelected.value = false
     initCompanySelection()
+  } else {
+    // 无企业时，默认选中个人
+    isPersonalSelected.value = true
+    activeCompanyId.value = ''
+    currentEnterprise.value = null
+    localSelectedCompany.value = ''
   }
 }, { immediate: true })
 
@@ -386,7 +421,7 @@ watch(() => userStore.selectedCompanyId, (v) => {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap:4px;
   border-radius: 16px 16px 0 0;
   flex: 1;
 
@@ -494,7 +529,7 @@ watch(() => userStore.selectedCompanyId, (v) => {
     }
 
     &.is-active {
-      background: rgba(0, 122, 255, 0.1);
+      background: rgba(0, 0, 0, 0.04);
       color: #007aff;
 
       .enterprise-name {
@@ -509,8 +544,8 @@ watch(() => userStore.selectedCompanyId, (v) => {
     }
 
     .enterprise-icon {
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -534,6 +569,10 @@ watch(() => userStore.selectedCompanyId, (v) => {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    
+    /* 使每一项背景撑满容器 */
+    width: 100%;
+    box-sizing: border-box;
 
     &.add-enterprise {
       color: #007aff;
@@ -551,6 +590,118 @@ watch(() => userStore.selectedCompanyId, (v) => {
       }
     }
   }
+}
+
+/* 个人信息模块 */
+.personal-section {
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.04);
+
+  .personal-row {
+    display: flex;
+    align-items: center;
+
+  }
+
+  .personal-avatar {
+    flex-shrink: 0;
+  }
+
+  .personal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .personal-name {
+      font-weight: 400;
+      color: #1f2329;
+      font-size: 16px;
+    }
+
+    .personal-email {
+      font-size: 12px;
+      color: #8f959e;
+    }
+  }
+
+  .personal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+ 
+  /* 个人项（与企业项样式一致，头像与姓名水平对齐） */
+  .personal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px ;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .personal-item .personal-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #E8F1FF 0%, #FCEFF6 100%);
+    color: #fff;
+  }
+
+  .personal-item .enterprise-name {
+    flex: 1;
+    font-size: 14px;
+    color: #1f2329;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .personal-item.is-active {
+    background: rgba(0, 0, 0, 0.04);
+    /* 保持文字/图标颜色不变，只有背景变为浅灰 */
+  }
+  .personal-item.is-active .check-icon {
+    color: #007aff;
+    margin-left: auto;
+  }
+}
+
+/* 个人模块样式 - 更苹果风 */
+.personal-section {
+  background: transparent;
+  padding: 12px 12px 8px 12px;
+}
+.personal-title {
+  font-size: 12px;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+  text-transform: none;
+}
+.personal-avatar :deep(.t-avatar) {
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, #E8F1FF 0%, #FCEFF6 100%);
+}
+.personal-name {
+  font-weight: 700;
+  color: #1f2329;
+  font-size: 16px;
+}
+.personal-email {
+  font-size: 12px;
+  color: #8f959e;
 }
 
 .popup-footer {

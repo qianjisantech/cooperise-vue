@@ -2,7 +2,7 @@
   <div class="header-container">
     <div class="header-left">
       <AppLogo :clickable="true" />
-      <div class="search-wrapper" :class="{ 'search-focused': searchFocused }">
+      <div class="search-wrapper" :class="{ 'search-focused': searchFocused, 'show-results': showSearchResults }">
         <t-input
             v-model="searchIssueNumber"
             placeholder="搜索事项单号或者概要"
@@ -10,14 +10,35 @@
             @focus="handleSearchFocus"
             @blur="handleSearchBlur"
             @input="handleSearchInput"
-            @keyup.enter="handleDirectSearch"
+            @enter="handleDirectSearch"
             class="search-input"
         >
           <template #prefix-icon>
             <t-icon name="search" />
           </template>
         </t-input>
+        <!-- 搜索结果下拉框 -->
+        <div v-if="showSearchResults && searchResults.length > 0" class="search-results">
+          <div
+              v-for="item in searchResults"
+              :key="item.id"
+              class="search-result-item"
+              @mousedown="handleSelectIssue(item)"
+          >
+            <div class="issue-info">
+              <span class="issue-no">{{ item.issueNo }}</span>
+              <span class="issue-summary">{{ item.summary }}</span>
+            </div>
+            <t-tag v-if="item.priority" size="small" :theme="getPriorityTheme(item.priority)">
+              {{ item.priority }}
+            </t-tag>
+          </div>
+        </div>
 
+        <!-- 无结果提示 -->
+        <div v-if="showSearchResults && searchResults.length === 0 && searchIssueNumber" class="search-no-result">
+          <span>暂无数据</span>
+        </div>
 
       </div>
     </div>
@@ -325,15 +346,17 @@ const handleSearchInput = () => {
   }
 
   // 防抖：输入停止300ms后才开始搜索
-  searchTimeout = setTimeout(async () => {
+    searchTimeout = setTimeout(async () => {
     try {
       const res = await searchIssues(keyword)
-      if (res.success || res.code === 200) {
-        searchResults.value = res.data || []
-        showSearchResults.value = true
-      }
+      // 无论后端返回结构如何，都尽量使用返回的数据展示下拉（即使为空也显示“暂无数据”）
+      const payload = res?.data ?? (Array.isArray(res) ? res : [])
+      searchResults.value = payload || []
+      showSearchResults.value = true
     } catch (error) {
       console.error('搜索事项失败:', error)
+      searchResults.value = []
+      showSearchResults.value = true
     }
   }, 300)
 }
@@ -444,9 +467,7 @@ const getNoticeTypeClass = (type) => {
       margin-left: 12px;
     }
 
-
   }
-
 
   .header-right {
     display: flex;
@@ -457,25 +478,29 @@ const getNoticeTypeClass = (type) => {
       margin-right: 100px;
     }
 
-    .search-wrapper {
-      width: 200px;
-      transition: all 0.3s ease;
-      position: relative;
-
-      &.search-focused {
-        width: 300px;
-
-      }
-
-      .search-input {
-        transition: all 0.3s ease;
-      }
-
-    }
   }
 }
 
-
+/* 搜索框聚焦时展开到 300px */
+.header-container .search-wrapper {
+  width: 220px;
+  transition: width 0.22s ease;
+  position: relative;
+}
+.header-container .search-wrapper.search-focused {
+  width: 300px !important;
+}
+/* 仅当有结果时显示下拉，并固定为 300x100 */
+.header-container .search-wrapper.show-results .search-results,
+.header-container .search-wrapper.show-results .search-no-result {
+  width: 300px !important;
+  max-height: 100px !important;
+  min-height: 100px !important;
+  overflow-y: auto !important;
+}
 
 </style>
+
+
+
 
