@@ -70,7 +70,7 @@
         <div class="card-body">
           <!-- 标题文字 -->
           <div class="login-title">
-            <h2 class="title-text">登录以继续使用</h2>
+            <h2 class="title-text">登录</h2>
           </div>
 
           <template v-if="showAccounts">
@@ -506,7 +506,7 @@ const acceptExisting = async () => {
               height: 48px;
               border-radius: 12px !important;
               border-color: rgba(0, 0, 0, 0.1);
-              background: #f5f5f7;
+              background: #ffffff;
               transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
               &:hover {
@@ -519,32 +519,17 @@ const acceptExisting = async () => {
                 background: #ffffff;
                 box-shadow: 0 0 0 3px rgba(0, 82, 217, 0.1);
               }
-              
-              .t-input__inner {
-                border-radius: 12px !important;
-              }
-              
+
               .t-input__wrap {
                 border-radius: 12px !important;
               }
 
               input {
                 font-size: 15px;
-                color: #1d1d1f;
+
               }
 
-              input::placeholder {
-                color: #86868b;
-              }
 
-              .t-input__prefix {
-                color: #86868b;
-              }
-
-            .t-input__suffix {
-              color: #86868b;
-              cursor: pointer;
-            }
           }
 
           .form-options {

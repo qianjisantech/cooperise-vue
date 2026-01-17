@@ -73,6 +73,10 @@
 
         <!-- 注册表单 -->
         <div class="card-body">
+          <div class="register-title">
+            <h2 class="title-text">注册</h2>
+          </div>
+
           <t-form
             ref="registerFormRef"
             :data="registerForm"
@@ -559,28 +563,16 @@ const cancelGoLogin = () => {
       padding: 48px 40px;
       border: 1px solid rgba(0, 0, 0, 0.06);
 
-      // Logo和标题区域
-      .card-header {
+      .register-title {
+        margin-bottom: 24px;
         text-align: center;
-        margin-bottom: 36px;
 
-        .logo-container {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 64px;
-          height: 64px;
-          background: linear-gradient(135deg, #0052d9 0%, #3e7dff 100%);
-          border-radius: 16px;
-          margin-bottom: 20px;
-          box-shadow: 0 4px 12px rgba(0, 82, 217, 0.2);
-
-          .logo-icon {
-            font-size: 32px;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-          }
+        .title-text {
+          font-size: 24px;
+          font-weight: 600;
+          color: #1d1d1f;
+          margin: 0;
+          letter-spacing: -0.01em;
         }
       }
 
@@ -599,7 +591,7 @@ const cancelGoLogin = () => {
             height: 48px;
             border-radius: 12px !important;
             border-color: rgba(0, 0, 0, 0.1);
-            background: #f5f5f7;
+            background: #ffffff;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
             &:hover {
@@ -612,14 +604,7 @@ const cancelGoLogin = () => {
               background: #ffffff;
               box-shadow: 0 0 0 3px rgba(0, 82, 217, 0.1);
             }
-            
-            .t-input__inner {
-              border-radius: 12px !important;
-            }
-            
-            .t-input__wrap {
-              border-radius: 12px !important;
-            }
+
 
             input {
               font-size: 15px;
