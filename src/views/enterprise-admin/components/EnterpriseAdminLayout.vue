@@ -146,7 +146,7 @@
     </t-drawer>
 
     <!-- 问题反馈悬浮按钮 -->
-    <FeedbackFloatButton />
+<!--    <FeedbackFloatButton />-->
   </div>
 </template>
 
@@ -263,10 +263,26 @@ const menuGroups = [
       {
         key: 'settings',
         label: '企业设置',
-        children: [
-          { key: 'custom-fields', label: '自定义字段', icon: 'edit' }
-        ]
-      }
+            children: [
+              {
+                key: 'custom-templates',
+                label: '自定义模板',
+                icon: 'edit',
+                children: [
+                  { key: 'custom-templates', label: '模板列表', icon: 'list' },
+                ]
+              },
+              {
+                key: 'template-design',
+                label: '模板设计',
+                icon: 'edit',
+                children: [
+                  { key: 'template-design', label: '模板设计', icon: 'file' },
+                ]
+              }
+            ]
+      },
+
     ]
   },
   {
@@ -304,7 +320,8 @@ const routeMap = {
   'enterprise-info': `/enterprise-admin/${enterpriseId.value}/info`,
   'members-list': `/enterprise-admin/${enterpriseId.value}/members`,
   'organization': `/enterprise-admin/${enterpriseId.value}/organization`,
-  'custom-fields': `/enterprise-admin/${enterpriseId.value}/custom-fields`,
+  'custom-templates': `/enterprise-admin/${enterpriseId.value}/custom-templates`,
+  'template-design': `/enterprise-admin/${enterpriseId.value}/template-design`,
   'enterprise-permissions': `/enterprise-admin/${enterpriseId.value}/enterprise-permissions`,
   'project-permissions': `/enterprise-admin/${enterpriseId.value}/project-permissions`
 }
@@ -331,8 +348,8 @@ const updateActiveMenu = () => {
     activeMenu.value = 'members-list'
   } else if (path.includes('/organization')) {
     activeMenu.value = 'organization'
-  } else if (path.includes('/custom-fields')) {
-    activeMenu.value = 'custom-fields'
+  } else if (path.includes('/custom-templates')) {
+    activeMenu.value = 'custom-templates'
   } else if (path.includes('/enterprise-permissions')) {
     activeMenu.value = 'enterprise-permissions'
   } else if (path.includes('/project-permissions')) {

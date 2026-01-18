@@ -1,12 +1,6 @@
 <template>
   <div class="organization-page">
     <t-card :bordered="false" class="organization-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="page-title">组织架构</h3>
-        </div>
-      </template>
-
       <!-- 操作栏 -->
       <div class="action-bar">
         <t-space>

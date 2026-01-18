@@ -1,12 +1,6 @@
 <template>
   <div class="members-page">
     <t-card :bordered="false" class="members-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="page-title">成员</h3>
-        </div>
-      </template>
-
       <!-- 操作栏 -->
       <div class="action-bar">
         <t-space>

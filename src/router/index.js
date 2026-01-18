@@ -62,10 +62,16 @@ export const staticRoutes = [
         meta: { title: '组织架构', requiresAuth: true }
       },
       {
-        path: 'custom-fields',
-        name: 'EnterpriseCustomFields',
-        component: () => import('@/views/enterprise-admin/EnterpriseInfo.vue'), // 临时使用同一个组件
-        meta: { title: '自定义字段', requiresAuth: true }
+        path: 'custom-templates',
+        name: 'EnterpriseCustomTemplates',
+        component: () => import('@/views/enterprise-admin/CustomTemplates.vue'),
+        meta: { title: '自定义模板', requiresAuth: true }
+      },
+      {
+        path: 'template-design',
+        name: 'EnterpriseTemplateDesign',
+        component: () => import('@/views/enterprise-admin/TemplateDesign.vue'),
+        meta: { title: '模板设计', requiresAuth: true }
       },
       {
         path: 'enterprise-permissions',

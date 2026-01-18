@@ -206,20 +206,6 @@
         </template>
           </t-table>
 
-          <!-- 分页组件 -->
-          <div class="pagination-container">
-            <t-pagination
-              v-model="pagination.current"
-              v-model:page-size="pagination.pageSize"
-              :total="pagination.total"
-              :page-size-options="[10, 20, 50, 100]"
-              show-page-size
-              show-page-number
-              show-jumper
-              @change="handlePageChange"
-              @page-size-change="handlePageSizeChange"
-            />
-          </div>
         </t-card>
       </div>
     </div>

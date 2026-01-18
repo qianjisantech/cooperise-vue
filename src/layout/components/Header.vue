@@ -2,50 +2,14 @@
   <div class="header-container">
     <div class="header-left">
       <AppLogo :clickable="true" />
-      <div class="search-wrapper" :class="{ 'search-focused': searchFocused, 'show-results': showSearchResults }">
-      <t-input
-            ref="searchInput"
-            v-model="searchIssueNumber"
-            placeholder="搜索事项单号或者概要"
-            clearable
-            @focus="handleSearchFocus"
-            @blur="handleSearchBlur"
-            @input="handleSearchInput"
-            @enter="handleDirectSearch"
-            @keydown="handleSearchKeydown"
-            class="search-input"
-        >
-          <template #prefix-icon>
-            <t-icon name="search" />
-          </template>
-        </t-input>
-        <!-- 搜索结果下拉框（按项目/类型分组，支持键盘导航与高亮） -->
-        <div v-if="showSearchResults && flattenedResults.length > 0" class="search-results">
-          <template v-for="(group, gIdx) in groupedResults" :key="gIdx">
-            <div class="search-group" v-if="group.title">{{ group.title }}</div>
-            <div
-                v-for="item in group.items"
-                :key="item.id"
-                class="search-result-item"
-                :class="{ 'is-highlighted': flattenedIndex(item) === highlightedIndex }"
-                @mousedown="handleSelectIssue(item)"
-                @mouseover="highlightedIndex = flattenedIndex(item)"
-            >
-              <div class="issue-info">
-                <span class="issue-no" v-html="highlightText(item.issueNo || '', searchIssueNumber)"></span>
-                <span class="issue-summary" v-html="highlightText(item.summary || '', searchIssueNumber)"></span>
-              </div>
-              <t-tag v-if="item.priority" size="small" :theme="getPriorityTheme(item.priority)">
-                {{ item.priority }}
-              </t-tag>
-            </div>
-          </template>
-        </div>
-
-        <!-- 无结果提示 -->
-        <div v-if="showSearchResults && flattenedResults.length === 0 && searchIssueNumber" class="search-no-result">
-          <span>暂无数据</span>
-        </div>
+      <div >
+        <QSearch
+            style="margin-left: 20px"
+            v-model="searchValue"
+            placeholder="搜索任务"
+            :suggestions="searchSuggestions"
+            @search="handleSearch"
+        />
 
       </div>
     </div>
@@ -69,14 +33,15 @@ import { useUserStore } from '@/store/user'
 import { useWorkspaceStore } from '@/store/workspace'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { searchIssues } from '@/api/workspace'
-
+import QSearch from '@/components/QSearch/index.vue'
 import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const workspaceStore = useWorkspaceStore()
-
+const searchValue = ref('')
+const searchWithButton = ref('')
 const searchIssueNumber = ref('')
 const searchFocused = ref(false)
 const showSearchResults = ref(false)
@@ -84,7 +49,29 @@ const searchResults = ref([])
 let searchTimeout = null
 const searchInput = ref(null)
 const highlightedIndex = ref(-1)
-
+const searchSuggestions = [
+  {
+    icon: '✓',
+    iconColor: '#52c41a',
+    title: 'cld-es适配录屏',
+    code: 'UG-646789'
+  },
+  {
+    icon: '🐛',
+    iconColor: '#ff4d4f',
+    title: '修复用户登录异常问题',
+    code: 'BUG-123456'
+  },
+  {
+    icon: '📋',
+    iconColor: '#1890ff',
+    title: '优化项目看板性能',
+    code: 'TASK-789012'
+  }
+]
+const handleSearch = (value) => {
+  console.log('搜索:', value)
+}
 // flattened view helper
 const flattenedResults = computed(() => {
   return Array.isArray(searchResults.value) ? searchResults.value : []
